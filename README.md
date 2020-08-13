@@ -1,5 +1,5 @@
 # Capstone Project
 
-This repository contains the capstone project for STEP Interns Pod 256.
+This repository contains the capstone project for STEP Interns Pod 260.
 
 Project name: Automatic Blur
