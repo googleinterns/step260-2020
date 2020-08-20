@@ -19,7 +19,7 @@
  * Add event listener to image upload button
  * Add canvases to the page, put sample image to them.
  */
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener('DOMContentLoaded', () => {
     const uploadButton = document.getElementById('upload-image');
     uploadButton.addEventListener('change', handleImageUpload);
 
@@ -95,7 +95,7 @@ async function blur(imageUrl) {
         rectsToBlurPromise.then((rects) => {
             blurAreas(rects, hiddenCanvas);
             createDownloadButton();
-        }).catch((error) => console.log("Error in getBlurAreas function"));
+        }).catch((error) => console.log('Error in getBlurAreas function'));
     }
 }
 
@@ -170,10 +170,10 @@ class Rect {
      * our Rect has top left corner, width and height.
      */
     constructor(_rect) {
-        this.leftX = Rect.get(Math.min, "x", _rect);
-        this.topY = Rect.get(Math.min, "y", _rect);
-        this.width = Rect.get(Math.max, "x", _rect) - this.leftX;
-        this.height = Rect.get(Math.max, "y", _rect) - this.topY;
+        this.leftX = Rect.get(Math.min, 'x', _rect);
+        this.topY = Rect.get(Math.min, 'y', _rect);
+        this.width = Rect.get(Math.max, 'x', _rect) - this.leftX;
+        this.height = Rect.get(Math.max, 'y', _rect) - this.topY;
     }
 }
 
@@ -184,7 +184,7 @@ class Rect {
  * @param {HTMLCanvasElement} hiddenCanvas Canvas with blurred image on it
  */
 function blurAreas(rectsToBlur, hiddenCanvas) {
-    const outputCanvas = document.getElementById('output-canvas')
+    const outputCanvas = document.getElementById('output-canvas');
     const outputCtx = outputCanvas.getContext('2d');
 
     const hiddenCtx = hiddenCanvas.getContext('2d');
@@ -230,28 +230,28 @@ function createDownloadButton() {
  */
 async function getBlurAreas() {
     return [[{
-        "x": 0,
-        "y": 0
+        'x': 0,
+        'y': 0
     }, {
-        "x": 300,
-        "y": 0
+        'x': 300,
+        'y': 0
     }, {
-        "x": 300,
-        "y": 300
+        'x': 300,
+        'y': 300
     }, {
-        "x": 0,
-        "y": 300
+        'x': 0,
+        'y': 300
     }], [{
-        "x": 200,
-        "y": 200
+        'x': 200,
+        'y': 200
     }, {
-        "x": 400,
-        "y": 200
+        'x': 400,
+        'y': 200
     }, {
-        "x": 400,
-        "y": 400
+        'x': 400,
+        'y': 400
     }, {
-        "x": 200,
-        "y": 400
+        'x': 200,
+        'y': 400
     }]];
 }
