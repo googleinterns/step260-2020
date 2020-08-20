@@ -42,9 +42,38 @@ document.addEventListener('DOMContentLoaded', () => {
  * Fuction which is called when user chooses file to upload
  */
 function handleImageUpload(event) {
-    // TODO: validate uploaded image
+    if (!validateImageUpload()) {
+        return;
+    }
+    
     const imageUrl = URL.createObjectURL(event.target.files[0]);
     blur(imageUrl);
+}
+
+/**
+ * Function to validate the uploaded image
+ * @return {Boolean}
+ */
+function validateImageUpload() {
+    const fileName = document.getElementById('upload-image').value;
+    
+    // if nothing was uploaded
+    if (fileName === '') {
+        alert('We can blur anything only if you upload an image');
+        return false;
+    }
+    
+    // validate file extension
+    const SUPPORTED_EXTENSIONS = ['png', 'jpeg', 'jpg'];
+    const fileExtension = fileName.substring(
+        fileName.lastIndexOf('.') + 1).toLowerCase();
+    
+    if (!SUPPORTED_EXTENSIONS.includes(fileExtension)) {
+        alert('We can support only jpg, jpeg and png images, sorry :(');
+        return false;
+    }
+    
+    return true;
 }
 
 /**
