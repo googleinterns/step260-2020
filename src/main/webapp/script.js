@@ -86,7 +86,7 @@ async function blur(imageUrl) {
 
     // need to wait until image loads to put it anywhere
     imageObj.onload = () => {
-        prepareCanvases(imageObj);
+        prepareHtmlElements(imageObj);
 
         // we need it for blurring only. The user won't see it.
         const hiddenCanvas = getHiddenCanvas(imageObj);
@@ -117,11 +117,12 @@ function getHiddenCanvas(image) {
 }
 
 /**
- * Fucntion to update input and output canvases for blurring a new image.
+ * Fucntion to update html page for blurring a new image.
  * It resizes canvases and draws new image on them.
+ * It deletes previous download button if there was.
  * @param {Image} image
  */
-function prepareCanvases(image) {
+function prepareHtmlElements(image) {
     const prepareCanvas = (canvasId) => {
         const canvas = document.getElementById(canvasId);
         updateCanvasDimentionsForImage(canvas, image);
@@ -131,6 +132,12 @@ function prepareCanvases(image) {
     }
     prepareCanvas('input-canvas');
     prepareCanvas('output-canvas');
+    
+    // remove download button
+    const downloadButton = document.getElementById('download-button');
+    if (downloadButton !== null) {
+        downloadButton.remove();
+    }
 }
 
 /**
@@ -204,6 +211,7 @@ function createDownloadButton() {
 
     // create button element
     const downloadButton = document.createElement('a');
+    downloadButton.setAttribute('id', 'download-button');
     downloadButton.innerHTML = 'Download';
 
     // set download url to the button
