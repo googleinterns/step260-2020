@@ -14,15 +14,15 @@
 
 'use strict';
 
-document.addEventListener("DOMContentLoaded", () => {
-    init();
-});
-
 /**
  * Function which is called when page loads.
- * Add canvases to the page and put sample image o them.
+ * Add event listener to image upload button
+ * Add canvases to the page, put sample image to them.
  */
-function init() {
+document.addEventListener("DOMContentLoaded", () => {
+    const uploadButton = document.getElementById('upload-image');
+    uploadButton.addEventListener('change', handleImageUpload);
+    
     const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
 
     const imagesContainer = document.getElementById('images-container');
@@ -36,6 +36,15 @@ function init() {
 
     // add sample image on page - original and blurred one.
     blur(SAMPLE_IMAGE_URL);
+});
+
+/**
+ * Fuction which is called when user chooses file to upload
+ */
+function handleImageUpload(event) {
+    // TODO: validate uploaded image
+    const imageUrl = URL.createObjectURL(event.target.files[0]);
+    blur(imageUrl);
 }
 
 /**
