@@ -22,7 +22,7 @@
 document.addEventListener("DOMContentLoaded", () => {
     const uploadButton = document.getElementById('upload-image');
     uploadButton.addEventListener('change', handleImageUpload);
-    
+
     const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
 
     const imagesContainer = document.getElementById('images-container');
@@ -94,6 +94,7 @@ async function blur(imageUrl) {
         // wait for server to respond and finish blurring
         rectsToBlurPromise.then((rects) => {
             blurAreas(rects, hiddenCanvas);
+            createDownloadButton();
         }).catch((error) => console.log("Error in getBlurAreas function"));
     }
 }
@@ -190,6 +191,28 @@ function blurAreas(rectsToBlur, hiddenCanvas) {
         // put that rectangle on output canvas
         outputCtx.putImageData(blurredItem, rect.leftX, rect.topY);
     }
+}
+
+/**
+ * Function to create and add to DOM button to download
+ * blurred image
+ */
+function createDownloadButton() {
+    // get url of blurred image
+    const outputCanvas = document.getElementById('output-canvas');
+    const imageUrl = outputCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+
+    // create button element
+    const downloadButton = document.createElement('a');
+    downloadButton.innerHTML = 'Download';
+
+    // set download url to the button
+    downloadButton.setAttribute('download', 'ImageBlurredInTheBestApp.png');
+    downloadButton.setAttribute('href', imageUrl);
+
+    // put button on the page
+    const imagesContainer = document.getElementById('images-container');
+    imagesContainer.append(downloadButton);
 }
 
 // now for testing purposes only
