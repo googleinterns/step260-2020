@@ -20,23 +20,23 @@
  * Add canvases to the page, put sample image to them.
  */
 document.addEventListener('DOMContentLoaded', () => {
-    const uploadButton = document.getElementById('upload-image');
-    uploadButton.addEventListener('change', handleImageUpload);
-
     const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
     const CANVAS_WIDTH = 300;
-
+    
+    const uploadButton = document.getElementById('upload-image');
+    uploadButton.addEventListener('change', handleImageUpload);
+    
     const imagesContainer = document.getElementById('images-container');
-
+    
     // put canvases into image container on html page
     const inputCanvas = createCanvas('input-canvas');
     inputCanvas.setAttribute('width', CANVAS_WIDTH);
     imagesContainer.append(inputCanvas);
-
+    
     const outputCanvas = createCanvas('output-canvas');
     outputCanvas.setAttribute('width', CANVAS_WIDTH);
     imagesContainer.append(outputCanvas);
-
+    
     // add sample image on page - original and blurred one.
     blur(SAMPLE_IMAGE_URL);
 });
@@ -87,7 +87,7 @@ function validateImageUpload() {
 function createCanvas(id) {
     const canvas = document.createElement('canvas');
     canvas.setAttribute('id', id);
-
+    
     return canvas;
 }
 
@@ -102,7 +102,7 @@ function createCanvasForImage(id, image) {
     canvas.setAttribute('id', id);
     canvas.setAttribute('width', image.width);
     canvas.setAttribute('height', image.height);
-
+    
     return canvas;
 }
 
@@ -114,15 +114,15 @@ function createCanvasForImage(id, image) {
 async function blur(imageUrl) {
     // get areas to blur from server
     const rectsToBlurPromise = getBlurAreas();
-
+    
     // create Imge object from url to put it on canvases
     const imageObj = new Image();
     imageObj.src = imageUrl;
-
+    
     // need to wait until image loads to put it anywhere
     imageObj.onload = () => {
         prepareHtmlElements(imageObj);
-
+        
         // wait for server to respond and finish blurring
         rectsToBlurPromise.then((rects) => {
             const blurredImage = getBlurredImage(rects, imageObj);
@@ -176,14 +176,14 @@ class Rect {
      */
     static get(func, property, arrayObject) {
         let ans = arrayObject[0][property];
-
+        
         for (let item of arrayObject) {
             ans = func(ans, item[property]);
         }
-
+        
         return ans;
     }
-
+    
     /**
      * @constructor
      * @param {JsonRect} _rect
@@ -220,13 +220,13 @@ function getBlurredImage(rectsToBlur, image) {
     const hiddenOutputCanvas = createCanvasForImage('hidden-output-canvas', image);
     const hiddenOutputCtx = hiddenOutputCanvas.getContext('2d');
     hiddenOutputCtx.drawImage(image, 0, 0);
-
+    
     for (let _rect of rectsToBlur) {
         const rect = new Rect(_rect);
-
+        
         // get blurred rectangle from blurred canvas
         const blurredItem = hiddenBlurredCtx.getImageData(rect.leftX, rect.topY, rect.width, rect.height);
-
+        
         // put that rectangle on output canvas
         hiddenOutputCtx.putImageData(blurredItem, rect.leftX, rect.topY);
     }
@@ -243,16 +243,16 @@ function getBlurredImage(rectsToBlur, image) {
 function createDownloadButton(imageCanvas) {
     // get url of blurred image
     const imageUrl = imageCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
-
+    
     // create button element
     const downloadButton = document.createElement('a');
     downloadButton.setAttribute('id', 'download-button');
     downloadButton.innerHTML = 'Download';
-
+    
     // set download url to the button
     downloadButton.setAttribute('download', 'ImageBlurredInTheBestApp.png');
     downloadButton.setAttribute('href', imageUrl);
-
+    
     // put button on the page
     const imagesContainer = document.getElementById('images-container');
     imagesContainer.append(downloadButton);
