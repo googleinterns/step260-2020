@@ -33,6 +33,7 @@ import java.awt.Point;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import javax.servlet.annotation.WebServlet;
@@ -43,11 +44,15 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/get-blur-areas")
 public class GetBlurAreasServlet extends HttpServlet {
 
+  // Image types that are supported by our application.
+  private static final ArrayList<String> supportedTypes =
+      new ArrayList<>(Arrays.asList("image/jpeg", "image/png"));
+
   /**
    * This method handles the POST requests to "/get-blur-areas". Receives a BlobKey parameter which
-   * represents the Blobstore location of an image. Responds with a JSON ArrayList of polygons. A
-   * polygon is represented by a List of points. A point contains two properties, its coordinates: x
-   * and y.
+   * represents the Blobstore location of an image. Responds with a JSON ArrayList of rectangles. A
+   * rectangle is represented by a List of points. A point contains two properties, its coordinates:
+   * x and y.
    */
   @Override
   public void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
@@ -56,7 +61,17 @@ public class GetBlurAreasServlet extends HttpServlet {
 
     // User didn't upload a file, so render an error message.
     if (blobKey == null) {
+      response.setContentType("text/html;");
       response.getWriter().println("Please upload an image file.");
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      return;
+    }
+
+    // User uploaded an unsupported type of file, so render an error message.
+    if (!isImageSupported(blobKey)) {
+      response.setContentType("text/html;");
+      response.getWriter().println("Image extension not supported.");
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
 
@@ -69,7 +84,7 @@ public class GetBlurAreasServlet extends HttpServlet {
     BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     blobstoreService.delete(blobKey);
 
-    // Convert the polygons to JSON.
+    // Convert the rectangles to JSON.
     Gson gson = new Gson();
     String jsonResponse = gson.toJson(blurAreas);
 
@@ -82,7 +97,7 @@ public class GetBlurAreasServlet extends HttpServlet {
    * Uses the Google Cloud Vision API to find faces in the image represented by the binary data
    * stored in @param imageBytes
    *
-   * @return an ArrayList of bounding polygons representing faces. Polygons are represented by a
+   * @return an ArrayList of bounding rectangles representing faces. rectangles are represented by a
    *     list of points.
    */
   private ArrayList<List<Point>> getBlurAreas(byte[] imageBytes) throws IOException {
@@ -112,13 +127,13 @@ public class GetBlurAreasServlet extends HttpServlet {
           continue;
         }
 
-        // For each face detected create a polygon represented by an array of points.
+        // For each face detected create a rectangle represented by an array of points.
         for (FaceAnnotation face : res.getFaceAnnotationsList()) {
           ArrayList<Point> facePoly = new ArrayList<>();
           for (Vertex vertex : face.getFdBoundingPoly().getVerticesList())
             facePoly.add(new Point(vertex.getX(), vertex.getY()));
 
-          // Add the polygon to our list of face polygons.
+          // Add the rectangle to our list of face rectangles.
           facePolys.add(facePoly);
         }
       }
@@ -136,7 +151,7 @@ public class GetBlurAreasServlet extends HttpServlet {
   private BlobKey getBlobKey(HttpServletRequest request, String formInputElementName) {
     BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     Map<String, List<BlobKey>> blobs = blobstoreService.getUploads(request);
-    List<BlobKey> blobKeys = blobs.get("image");
+    List<BlobKey> blobKeys = blobs.get(formInputElementName);
 
     // User submitted form without selecting a file, so we can't get a BlobKey. (dev server)
     if (blobKeys == null || blobKeys.isEmpty()) {
@@ -182,5 +197,10 @@ public class GetBlurAreasServlet extends HttpServlet {
     }
 
     return outputBytes.toByteArray();
+  }
+
+  private Boolean isImageSupported(BlobKey blobKey) {
+    BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
+    return supportedTypes.contains(blobInfo.getContentType());
   }
 }
