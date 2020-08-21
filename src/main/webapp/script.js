@@ -24,14 +24,17 @@ document.addEventListener('DOMContentLoaded', () => {
     uploadButton.addEventListener('change', handleImageUpload);
 
     const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
+    const CANVAS_WIDTH = 300;
 
     const imagesContainer = document.getElementById('images-container');
 
     // put canvases into image container on html page
     const inputCanvas = createCanvas('input-canvas');
+    inputCanvas.setAttribute('width', CANVAS_WIDTH);
     imagesContainer.append(inputCanvas);
 
     const outputCanvas = createCanvas('output-canvas');
+    outputCanvas.setAttribute('width', CANVAS_WIDTH);
     imagesContainer.append(outputCanvas);
 
     // add sample image on page - original and blurred one.
@@ -77,6 +80,7 @@ function validateImageUpload() {
 }
 
 /**
+ * Creates canvas with specified id.
  * @param {string} id
  * @return {HTMLCanvasElement} canvas DOM element
  */
@@ -88,16 +92,18 @@ function createCanvas(id) {
 }
 
 /**
- * Modifies canvas width and height to be width and height of an image.
- * @param {HTMLCanvasElement} canvas
+ * Creates canvas with width and height of an image, with specified id.
+ * @param {string} id
  * @param {Image} image
+ * @return {HTMLCanvasElement} canvas DOM element
  */
-function updateCanvasDimentionsForImage(canvas, image) {
-    // clear canvas
-    canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
-
+function createCanvasForImage(id, image) {
+    const canvas = document.createElement('canvas');
+    canvas.setAttribute('id', id);
     canvas.setAttribute('width', image.width);
     canvas.setAttribute('height', image.height);
+
+    return canvas;
 }
 
 /**
@@ -117,32 +123,13 @@ async function blur(imageUrl) {
     imageObj.onload = () => {
         prepareHtmlElements(imageObj);
 
-        // we need it for blurring only. The user won't see it.
-        const hiddenCanvas = getHiddenCanvas(imageObj);
-
         // wait for server to respond and finish blurring
         rectsToBlurPromise.then((rects) => {
-            blurAreas(rects, hiddenCanvas);
-            createDownloadButton();
-        }).catch((error) => console.log('Error in getBlurAreas function'));
+            const blurredImage = getBlurredImage(rects, imageObj);
+            createDownloadButton(blurredImage);
+            showBlurredImage(blurredImage);
+        });
     }
-}
-
-/**
- * Function to create canvas and draw blurred image on it.
- * This canvas will not be appended to DOM
- * @param {Image} image
- * @return {HTMLCanvasElement} hiddenCanvas with blurred image on it
- */
-function getHiddenCanvas(image) {
-    const hiddenCanvas = createCanvas('hidden-canvas');
-    updateCanvasDimentionsForImage(hiddenCanvas, image);
-
-    const hiddenCtx = hiddenCanvas.getContext('2d');
-    hiddenCtx.filter = 'blur(5px)';
-    hiddenCtx.drawImage(image, 0, 0);
-
-    return hiddenCanvas;
 }
 
 /**
@@ -154,10 +141,16 @@ function getHiddenCanvas(image) {
 function prepareHtmlElements(image) {
     const prepareCanvas = (canvasId) => {
         const canvas = document.getElementById(canvasId);
-        updateCanvasDimentionsForImage(canvas, image);
-
         const ctx = canvas.getContext('2d');
-        ctx.drawImage(image, 0, 0);
+        
+        // clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        //resize canvas height to fit new image
+        canvas.height = image.height * canvas.width / image.width;
+        
+        // draw new image on it, scaling the image to fit in canvas
+        ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
     }
     prepareCanvas('input-canvas');
     prepareCanvas('output-canvas');
@@ -207,36 +200,49 @@ class Rect {
 }
 
 /**
- * Function that blurs specific rectangles and puts in on outputCanvas
- * @param {Array<JsonRect>} rectsToBlur Rectangles to blur that we get from
- *                                      server
- * @param {HTMLCanvasElement} hiddenCanvas Canvas with blurred image on it
+ * Function that blurs specific rectangles of an image
+ * @param {Array<JsonRect>} rectsToBlur A list of coordinates of 
+ *                                      rectangles to blur
+ * @param {Image} image Image on which we want to blur those rectangles
+ * @return {HTMLCanvasElement} canvas with an image with blurred rectangles
+ * The general idea is to create canvas with blurred image on it,
+ * and canvas with not blurred image on it. Then we need to extract
+ * rectangles from blurred image and put them on top of not-blurred image.
  */
-function blurAreas(rectsToBlur, hiddenCanvas) {
-    const outputCanvas = document.getElementById('output-canvas');
-    const outputCtx = outputCanvas.getContext('2d');
-
-    const hiddenCtx = hiddenCanvas.getContext('2d');
+function getBlurredImage(rectsToBlur, image) {
+    // create hidden canvas and draw blurred image on it
+    const hiddenBlurredCanvas = createCanvasForImage('hidden-blurred-canvas', image);
+    const hiddenBlurredCtx = hiddenBlurredCanvas.getContext('2d');
+    hiddenBlurredCtx.filter = 'blur(5px)';
+    hiddenBlurredCtx.drawImage(image, 0, 0);
+    
+    // create hidden canvas and draw not-blurred image on it
+    const hiddenOutputCanvas = createCanvasForImage('hidden-output-canvas', image);
+    const hiddenOutputCtx = hiddenOutputCanvas.getContext('2d');
+    hiddenOutputCtx.drawImage(image, 0, 0);
 
     for (let _rect of rectsToBlur) {
         const rect = new Rect(_rect);
 
         // get blurred rectangle from blurred canvas
-        const blurredItem = hiddenCtx.getImageData(rect.leftX, rect.topY, rect.width, rect.height);
+        const blurredItem = hiddenBlurredCtx.getImageData(rect.leftX, rect.topY, rect.width, rect.height);
 
         // put that rectangle on output canvas
-        outputCtx.putImageData(blurredItem, rect.leftX, rect.topY);
+        hiddenOutputCtx.putImageData(blurredItem, rect.leftX, rect.topY);
     }
+    
+    return hiddenOutputCanvas;
 }
 
 /**
  * Function to create and add to DOM button to download
  * blurred image
+ * @param {HTMLCanvasElement} imageCanvas Canvas with blurred image on it.
+ *                      We want to create a download button for this image
  */
-function createDownloadButton() {
+function createDownloadButton(imageCanvas) {
     // get url of blurred image
-    const outputCanvas = document.getElementById('output-canvas');
-    const imageUrl = outputCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    const imageUrl = imageCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
 
     // create button element
     const downloadButton = document.createElement('a');
@@ -250,6 +256,18 @@ function createDownloadButton() {
     // put button on the page
     const imagesContainer = document.getElementById('images-container');
     imagesContainer.append(downloadButton);
+}
+
+/**
+ * Function to show blurred image on output canvas on page.
+ * @param {HTMLCanvasElement} imageCanvas Blurred image that we want to show
+ */
+function showBlurredImage(imageCanvas) {
+    const outputCanvas = document.getElementById('output-canvas');
+    const outputCtx = outputCanvas.getContext('2d');
+    
+    // draw an image on canvas, scaling the image to fit in canvas
+    outputCtx.drawImage(imageCanvas, 0, 0, outputCanvas.width, outputCanvas.height);
 }
 
 // now for testing purposes only
