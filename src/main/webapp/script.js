@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Fuction which is called when user chooses file to upload
+ * @param {Event} event Change event on image upload button
  */
 function handleImageUpload(event) {
   if (!validateImageUpload()) {
@@ -127,7 +128,7 @@ async function blur(imageUrl) {
       createDownloadButton(blurredImage);
       showBlurredImage(blurredImage);
     });
-  }
+  };
 }
 
 /**
@@ -144,12 +145,12 @@ function prepareHtmlElements(image) {
     // clear canvas
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    //resize canvas height to fit new image
+    // resize canvas height to fit new image
     canvas.height = image.height * canvas.width / image.width;
 
     // draw new image on it, scaling the image to fit in canvas
     ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
-  }
+  };
   prepareCanvas('input-canvas');
   prepareCanvas('output-canvas');
 
@@ -168,14 +169,14 @@ class Rect {
    * @param {function} func Can be min or max function
    * @param {string} property Property which all the items
    *                          in arrayObject have
-   * @param {arrayObject} array of Objects
-   * @return min or max (depending on func) value of the
+   * @param {Array} arrayObject array of Objects
+   * @return {Number} min or max (depending on func) value of the
    *         specified property among arrayObject items.
    */
   static get(func, property, arrayObject) {
     let ans = arrayObject[0][property];
 
-    for (let item of arrayObject) {
+    for (const item of arrayObject) {
       ans = func(ans, item[property]);
     }
 
@@ -221,7 +222,7 @@ function getBlurredImage(rectsToBlur, image) {
 
   blurredRectsCtx.globalCompositeOperation = 'destination-in';
 
-  for (let _rect of rectsToBlur) {
+  for (const _rect of rectsToBlur) {
     const rect = new Rect(_rect);
 
     // blur radius depends on the rect size
@@ -233,7 +234,8 @@ function getBlurredImage(rectsToBlur, image) {
     const hiddenBlurredCtx = hiddenBlurredCanvas.getContext('2d');
 
     // get blurred rectangle from blurred canvas
-    const blurredItem = hiddenBlurredCtx.getImageData(rect.leftX, rect.topY, rect.width, rect.height);
+    const blurredItem = hiddenBlurredCtx.getImageData(
+        rect.leftX, rect.topY, rect.width, rect.height);
 
     // put that rectangle on canvas for blurred areas
     blurredRectsCtx.putImageData(blurredItem, rect.leftX, rect.topY);
@@ -301,9 +303,10 @@ function getBlurRadius(rect) {
  * @param {HTMLCanvasElement} imageCanvas Canvas with blurred image on it.
  *                      We want to create a download button for this image
  */
-function createDownloadButton(imageCanvas) {Ò
+function createDownloadButton(imageCanvas) {
   // get url of blurred image
-  const imageUrl = imageCanvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+  const imageUrl = imageCanvas.toDataURL('image/png').replace(
+      'image/png', 'image/octet-stream');
 
   // create button element
   const downloadButton = document.createElement('a');
@@ -328,7 +331,8 @@ function showBlurredImage(imageCanvas) {
   const outputCtx = outputCanvas.getContext('2d');
 
   // draw an image on canvas, scaling the image to fit in canvas
-  outputCtx.drawImage(imageCanvas, 0, 0, outputCanvas.width, outputCanvas.height);
+  outputCtx.drawImage(imageCanvas, 0, 0,
+      outputCanvas.width, outputCanvas.height);
 }
 
 // now for testing purposes only
@@ -339,39 +343,40 @@ function showBlurredImage(imageCanvas) {
 async function getBlurAreas() {
   return [[{
     'x': 0,
-    'y': 0
+    'y': 0,
   }, {
     'x': 300,
-    'y': 0
+    'y': 0,
   }, {
     'x': 300,
-    'y': 300
+    'y': 300,
   }, {
     'x': 0,
-    'y': 300
+    'y': 300,
   }], [{
     'x': 200,
-    'y': 200
+    'y': 200,
   }, {
     'x': 400,
-    'y': 200
+    'y': 200,
   }, {
     'x': 400,
-    'y': 400
+    'y': 400,
   }, {
     'x': 200,
-    'y': 400
+    'y': 400,
   }], [{
     'x': 200,
-    'y': 200
+    'y': 200,
   }, {
     'x': 800,
-    'y': 200
+    'y': 200,
   }, {
     'x': 800,
-    'y': 800
+    'y': 800,
   }, {
     'x': 200,
-    'y': 800
-  }]];
+    'y': 800,
+  }],
+  ];
 }
