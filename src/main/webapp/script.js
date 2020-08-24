@@ -92,14 +92,12 @@ function createCanvas(id) {
 }
 
 /**
- * Creates canvas with width and height of an image, with specified id.
- * @param {string} id
+ * Creates canvas with width and height of an image
  * @param {Image} image
  * @return {HTMLCanvasElement} canvas DOM element
  */
-function createCanvasForImage(id, image) {
+function createCanvasForImage(image) {
     const canvas = document.createElement('canvas');
-    canvas.setAttribute('id', id);
     canvas.setAttribute('width', image.width);
     canvas.setAttribute('height', image.height);
     
@@ -208,30 +206,93 @@ class Rect {
  * The general idea is to create canvas with blurred image on it,
  * and canvas with not blurred image on it. Then we need to extract
  * rectangles from blurred image and put them on top of not-blurred image.
+ * The image is blurred using Gaussian blur algorithm
+ * (it is implemented in canvas.filter.blur)
  */
 function getBlurredImage(rectsToBlur, image) {
-    // create hidden canvas and draw blurred image on it
-    const hiddenBlurredCanvas = createCanvasForImage('hidden-blurred-canvas', image);
-    const hiddenBlurredCtx = hiddenBlurredCanvas.getContext('2d');
-    hiddenBlurredCtx.filter = 'blur(5px)';
-    hiddenBlurredCtx.drawImage(image, 0, 0);
+    // create result canvas and draw not-blurred image on it
+    const resultCanvas = createCanvasForImage(image);
+    const resultCtx = resultCanvas.getContext('2d');
+    resultCtx.drawImage(image, 0, 0);
     
-    // create hidden canvas and draw not-blurred image on it
-    const hiddenOutputCanvas = createCanvasForImage('hidden-output-canvas', image);
-    const hiddenOutputCtx = hiddenOutputCanvas.getContext('2d');
-    hiddenOutputCtx.drawImage(image, 0, 0);
+    // create canvas to put blurred areas there
+    const blurredRectsCanvas = createCanvasForImage(image);
+    const blurredRectsCtx = blurredRectsCanvas.getContext('2d');
+    
+    blurredRectsCtx.globalCompositeOperation = "destination-in";
     
     for (let _rect of rectsToBlur) {
         const rect = new Rect(_rect);
         
+        // blur radius depends on the rect size
+        const blurRadius = getBlurRadius(rect);
+        console.log(blurRadius);
+        
+        // we will get blurred rectangle from this canvas
+        const hiddenBlurredCanvas = getBlurredCanvas(image, blurRadius);
+        const hiddenBlurredCtx = hiddenBlurredCanvas.getContext('2d');
+        
         // get blurred rectangle from blurred canvas
         const blurredItem = hiddenBlurredCtx.getImageData(rect.leftX, rect.topY, rect.width, rect.height);
         
-        // put that rectangle on output canvas
-        hiddenOutputCtx.putImageData(blurredItem, rect.leftX, rect.topY);
+        // put that rectangle on canvas for blurred areas
+        blurredRectsCtx.putImageData(blurredItem, rect.leftX, rect.topY);
     }
     
-    return hiddenOutputCanvas;
+    // create canvas to apply smooth blur edges
+    // without it edges of blurred areas will look very rectangular
+    const shadowedRectsCanvas = createCanvasForImage(image);
+    const shadowedRectsCtx = shadowedRectsCanvas.getContext('2d');
+    
+    // put blurred areas on another canvas and aplly smooth edges for them
+    shadowedRectsCtx.drawImage(blurredRectsCanvas, 0, 0);
+    shadowedRectsCtx.shadowColor = "black";
+    shadowedRectsCtx.shadowBlur = 30;
+    shadowedRectsCtx.globalCompositeOperation = "destination-in";
+    
+    shadowedRectsCtx.shadowBlur = 20;
+    shadowedRectsCtx.drawImage(blurredRectsCanvas, 0, 0);
+    shadowedRectsCtx.shadowBlur = 10;
+    shadowedRectsCtx.drawImage(blurredRectsCanvas, 0, 0);
+    
+    // put original image and blurred faces on result canvas
+    resultCtx.clearRect(0, 0, image.width, image.height);
+    resultCtx.drawImage(image, 0, 0);
+    resultCtx.drawImage(shadowedRectsCanvas, 0, 0);
+    
+    return resultCanvas;
+}
+
+/**
+ * @param {Image} image
+ * @param {Number} blurRadius Parameter which indicates the amount of blur
+ * @return {HTMLCanvasElement} canvas with blurred image on it
+ */
+function getBlurredCanvas(image, blurRadius) {
+    const blurredCanvas = createCanvasForImage(image);
+    const blurredCtx = blurredCanvas.getContext('2d');
+    
+    blurredCtx.filter = `blur(${blurRadius}px)`;
+    blurredCtx.drawImage(image, 0, 0);
+    
+    return blurredCanvas;
+}
+
+/**
+ * Blur radius defines how many pixels on the screen blend into each other.
+ * Here we get the best (to my mind) blur radius for the
+ * dimensions of the rectangle we are going to blur
+ * @param {Rect} rect
+ * @return {Number} blur radius
+ */
+function getBlurRadius(rect) {
+    if (rect.w > 300) {
+        return 120;
+    }
+    if (rect.w < 30) {
+        return 9;
+    }
+    return 30;
 }
 
 /**
@@ -300,5 +361,17 @@ async function getBlurAreas() {
     }, {
         'x': 200,
         'y': 400
+    }], [{
+        'x': 200,
+        'y': 200
+    }, {
+        'x': 800,
+        'y': 200
+    }, {
+        'x': 800,
+        'y': 800
+    }, {
+        'x': 200,
+        'y': 800
     }]];
 }
