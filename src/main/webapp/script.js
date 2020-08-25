@@ -16,7 +16,7 @@
 
 /**
  * Function which is called when page loads.
- * Add event listener to image upload button
+ * Add event listener to image upload button.
  * Add canvases to the page, put sample image to them.
  */
 document.addEventListener('DOMContentLoaded', () => {
@@ -42,8 +42,8 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 /**
- * Fuction which is called when user chooses file to upload
- * @param {Event} event Change event on image upload button
+ * Function which is called when user chooses file to upload.
+ * @param {Event} event Change event on image upload button.
  */
 function handleImageUpload(event) {
   if (!validateImageUpload()) {
@@ -55,7 +55,7 @@ function handleImageUpload(event) {
 }
 
 /**
- * Function to validate the uploaded image
+ * Function to validate the uploaded image.
  * @return {Boolean}
  */
 function validateImageUpload() {
@@ -93,7 +93,7 @@ function createCanvas(id) {
 }
 
 /**
- * Creates canvas with width and height of an image
+ * Creates canvas with width and height of an image.
  * @param {Image} image
  * @return {HTMLCanvasElement} canvas DOM element
  */
@@ -107,14 +107,14 @@ function createCanvasForImage(image) {
 
 /**
  * Function to handle all the blurring process
- * and putting both blurred and original images on page
+ * and putting both blurred and original images on page.
  * @param {string} imageUrl
  */
 async function blur(imageUrl) {
   // get areas to blur from server
   const rectsToBlurPromise = getBlurAreas();
 
-  // create Imge object from url to put it on canvases
+  // create Image object from url to put it on canvases
   const imageObj = new Image();
   imageObj.src = imageUrl;
 
@@ -132,7 +132,7 @@ async function blur(imageUrl) {
 }
 
 /**
- * Fucntion to update html page for blurring a new image.
+ * Function to update html page for blurring a new image.
  * It resizes canvases and draws new image on them.
  * It deletes previous download button if there was.
  * @param {Image} image
@@ -162,53 +162,43 @@ function prepareHtmlElements(image) {
 }
 
 /**
- * Class for a rectangle to blur
+ * Class for a rectangle to blur.
  */
 class Rect {
   /**
-   * @param {function} func Can be min or max function
-   * @param {string} property Property which all the items
-   *                          in arrayObject have
-   * @param {Array} arrayObject array of Objects
-   * @return {Number} min or max (depending on func) value of the
-   *         specified property among arrayObject items.
-   */
-  static get(func, property, arrayObject) {
-    let ans = arrayObject[0][property];
-
-    for (const item of arrayObject) {
-      ans = func(ans, item[property]);
-    }
-
-    return ans;
-  }
-
-  /**
    * @constructor
    * @param {JsonRect} _rect
-   * Constructs Rect from rectangle object we get from json
-   * Rectange object we get from json has 4 points - its corners,
+   * Constructs Rect from rectangle object we get from json.
+   * Rectangle object we get from json has 4 points - its corners,
    * our Rect has top left corner, width and height.
    */
   constructor(_rect) {
-    this.leftX = Rect.get(Math.min, 'x', _rect);
-    this.topY = Rect.get(Math.min, 'y', _rect);
-    this.width = Rect.get(Math.max, 'x', _rect) - this.leftX;
-    this.height = Rect.get(Math.max, 'y', _rect) - this.topY;
+    // get minimum of x values from _rect
+    this.leftX = _rect.reduce((min, r) => r.x < min ? r.x : min, _rect[0].x);
+    // get minimum of y values from _rect
+    this.topY = _rect.reduce((min, r) => r.y < min ? r.y : min, _rect[0].y);
+
+    // get maximum of x values from _rect and calculate width as that maximum - minimum
+    const rightX = _rect.reduce((max, r) => r.x > max ? r.x : max, _rect[0].x);
+    this.width = rightX - this.leftX + 1;
+
+    // get maximum of y values from _rect and calculate height as that maximum - minimum
+    const bottomY = _rect.reduce((max, r) => r.y > max ? r.y : max, _rect[0].y);
+    this.height = bottomY - this.topY + 1;
   }
 }
 
 /**
- * Function that blurs specific rectangles of an image
+ * Function that blurs specific rectangles of an image.
  * @param {Array<JsonRect>} rectsToBlur A list of coordinates of
- *                                      rectangles to blur
- * @param {Image} image Image on which we want to blur those rectangles
- * @return {HTMLCanvasElement} canvas with an image with blurred rectangles
+ *                                      rectangles to blur.
+ * @param {Image} image Image on which we want to blur those rectangles.
+ * @return {HTMLCanvasElement} canvas with an image with blurred rectangles.
  * The general idea is to create canvas with blurred image on it,
  * and canvas with not blurred image on it. Then we need to extract
  * rectangles from blurred image and put them on top of not-blurred image.
  * The image is blurred using Gaussian blur algorithm
- * (it is implemented in canvas.filter.blur)
+ * (it is implemented in canvas.filter.blur).
  */
 function getBlurredImage(rectsToBlur, image) {
   // create result canvas and draw not-blurred image on it
@@ -227,7 +217,6 @@ function getBlurredImage(rectsToBlur, image) {
 
     // blur radius depends on the rect size
     const blurRadius = getBlurRadius(rect);
-    console.log(blurRadius);
 
     // we will get blurred rectangle from this canvas
     const hiddenBlurredCanvas = getBlurredCanvas(image, blurRadius);
@@ -267,8 +256,8 @@ function getBlurredImage(rectsToBlur, image) {
 
 /**
  * @param {Image} image
- * @param {Number} blurRadius Parameter which indicates the amount of blur
- * @return {HTMLCanvasElement} canvas with blurred image on it
+ * @param {Number} blurRadius Parameter which indicates the amount of blur.
+ * @return {HTMLCanvasElement} canvas with blurred image on it.
  */
 function getBlurredCanvas(image, blurRadius) {
   const blurredCanvas = createCanvasForImage(image);
@@ -283,7 +272,7 @@ function getBlurredCanvas(image, blurRadius) {
 /**
  * Blur radius defines how many pixels on the screen blend into each other.
  * Here we get the best (to my mind) blur radius for the
- * dimensions of the rectangle we are going to blur
+ * dimensions of the rectangle we are going to blur.
  * @param {Rect} rect
  * @return {Number} blur radius
  */
@@ -299,9 +288,9 @@ function getBlurRadius(rect) {
 
 /**
  * Function to create and add to DOM button to download
- * blurred image
+ * blurred image.
  * @param {HTMLCanvasElement} imageCanvas Canvas with blurred image on it.
- *                      We want to create a download button for this image
+ *                      We want to create a download button for this image.
  */
 function createDownloadButton(imageCanvas) {
   // get url of blurred image
@@ -324,7 +313,7 @@ function createDownloadButton(imageCanvas) {
 
 /**
  * Function to show blurred image on output canvas on page.
- * @param {HTMLCanvasElement} imageCanvas Blurred image that we want to show
+ * @param {HTMLCanvasElement} imageCanvas Blurred image that we want to show.
  */
 function showBlurredImage(imageCanvas) {
   const outputCanvas = document.getElementById('output-canvas');
@@ -337,8 +326,8 @@ function showBlurredImage(imageCanvas) {
 
 // now for testing purposes only
 /**
- * Function to get rectangles to blur from server
- * @return {Array<JsonRect>} rectangles to blur
+ * Function to get rectangles to blur from server.
+ * @return {Array<JsonRect>} rectangles to blur.
  */
 async function getBlurAreas() {
   return [[{
