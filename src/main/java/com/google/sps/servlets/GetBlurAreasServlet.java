@@ -67,12 +67,15 @@ public class GetBlurAreasServlet extends HttpServlet {
       return;
     }
 
-    // User uploaded an unsupported type of file, so render an error message.
-    if (!isImageSupported(blobKey)) {
+    // Check if uploaded file type is supported.
+    BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
+    String fileType = blobInfo.getContentType();
+    if (!supportedTypes.contains(fileType)) {
       deleteFile(blobKey);
 
       response.setContentType("text/html;");
-      response.getWriter().println("Image extension not supported.");
+      response.getWriter().println("Image type <" + fileType + "> not supported.");
+      response.getWriter().println("Types supported: " + supportedTypes.toString());
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
       return;
     }
@@ -96,12 +99,12 @@ public class GetBlurAreasServlet extends HttpServlet {
    * Uses the Google Cloud Vision API to find faces in the image represented by the binary data
    * stored in @param imageBytes
    *
-   * @return an ArrayList of bounding rectangles representing faces. rectangles are represented by a
-   *     list of points.
+   * @return an ArrayList of bounding rectangles representing faces. Rectangles are represented by a
+   *     list of points. There is no guaranteed order of the points.
    */
   private ArrayList<List<Point>> getBlurAreas(byte[] imageBytes) throws IOException {
     // This is the array that we will return.
-    ArrayList<List<Point>> facePolys = new ArrayList<>();
+    ArrayList<List<Point>> faceBorders = new ArrayList<>();
 
     // Convert bytes to an Image object.
     ByteString byteString = ByteString.copyFrom(imageBytes);
@@ -112,17 +115,19 @@ public class GetBlurAreasServlet extends HttpServlet {
     AnnotateImageRequest request =
         AnnotateImageRequest.newBuilder().addFeatures(feature).setImage(image).build();
 
-    // Add request to an array.
+    // Create an array of requests containing only ours to pass to the batchAnnotateImages function.
     List<AnnotateImageRequest> requests = new ArrayList<>();
     requests.add(request);
 
-    // Annotate the image from our request.
+    // Annotate the image from our request. Skip if there is any internal error in the API.
     try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
       BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
       List<AnnotateImageResponse> responses = response.getResponsesList();
 
       for (AnnotateImageResponse res : responses) {
+        // If there was any internal error in the Cloud Vision API, skip this response
         if (res.hasError()) {
+          System.out.println(res.getError());
           continue;
         }
 
@@ -133,14 +138,14 @@ public class GetBlurAreasServlet extends HttpServlet {
             facePoly.add(new Point(vertex.getX(), vertex.getY()));
 
           // Add the rectangle to our list of face rectangles.
-          facePolys.add(facePoly);
+          faceBorders.add(facePoly);
         }
       }
 
       client.close();
     }
 
-    return facePolys;
+    return faceBorders;
   }
 
   /**
@@ -180,20 +185,16 @@ public class GetBlurAreasServlet extends HttpServlet {
 
     int fetchSize = BlobstoreService.MAX_BLOB_FETCH_SIZE;
     long currentByteIndex = 0;
-    boolean continueReading = true;
-    while (continueReading) {
+    byte[] b;
+    do {
       // End index is inclusive, so we have to subtract 1 to get fetchSize bytes.
-      byte[] b =
-          blobstoreService.fetchData(blobKey, currentByteIndex, currentByteIndex + fetchSize - 1);
+      b = blobstoreService.fetchData(blobKey, currentByteIndex, currentByteIndex + fetchSize - 1);
       outputBytes.write(b);
-
-      // If we read fewer bytes than we requested, then we reached the end.
-      if (b.length < fetchSize) {
-        continueReading = false;
-      }
 
       currentByteIndex += fetchSize;
     }
+    // If we read fewer bytes than we requested, then we reached the end.
+    while (b.length == fetchSize);
 
     return outputBytes.toByteArray();
   }
@@ -201,6 +202,11 @@ public class GetBlurAreasServlet extends HttpServlet {
   private Boolean isImageSupported(BlobKey blobKey) {
     BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
     return supportedTypes.contains(blobInfo.getContentType());
+  }
+
+  private String getFileType(BlobKey blobKey) {
+    BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
+    return blobInfo.getContentType();
   }
 
   /** Deletes a file from the blobstore */
