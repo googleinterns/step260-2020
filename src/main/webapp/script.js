@@ -178,11 +178,13 @@ class Rect {
     // get minimum of y values from _rect
     this.topY = _rect.reduce((min, r) => r.y < min ? r.y : min, _rect[0].y);
 
-    // get maximum of x values from _rect and calculate width as that maximum - minimum
+    // get maximum of x values from _rect and calculate width as
+    // maximum-minimum
     const rightX = _rect.reduce((max, r) => r.x > max ? r.x : max, _rect[0].x);
     this.width = rightX - this.leftX + 1;
 
-    // get maximum of y values from _rect and calculate height as that maximum - minimum
+    // get maximum of y values from _rect and calculate height as
+    // maximum-minimum
     const bottomY = _rect.reduce((max, r) => r.y > max ? r.y : max, _rect[0].y);
     this.height = bottomY - this.topY + 1;
   }
