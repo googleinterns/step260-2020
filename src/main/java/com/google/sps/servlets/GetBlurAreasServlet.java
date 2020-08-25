@@ -69,6 +69,8 @@ public class GetBlurAreasServlet extends HttpServlet {
 
     // User uploaded an unsupported type of file, so render an error message.
     if (!isImageSupported(blobKey)) {
+      deleteFile(blobKey);
+
       response.setContentType("text/html;");
       response.getWriter().println("Image extension not supported.");
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -79,10 +81,7 @@ public class GetBlurAreasServlet extends HttpServlet {
     byte[] imageBytes = getBlobBytes(blobKey);
 
     ArrayList<List<Point>> blurAreas = getBlurAreas(imageBytes);
-
-    // Delete the image from the blobstore.
-    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-    blobstoreService.delete(blobKey);
+    deleteFile(blobKey);
 
     // Convert the rectangles to JSON.
     Gson gson = new Gson();
@@ -202,5 +201,11 @@ public class GetBlurAreasServlet extends HttpServlet {
   private Boolean isImageSupported(BlobKey blobKey) {
     BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
     return supportedTypes.contains(blobInfo.getContentType());
+  }
+
+  /** Deletes a file from the blobstore */
+  private void deleteFile(BlobKey blobKey) {
+    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+    blobstoreService.delete(blobKey);
   }
 }
