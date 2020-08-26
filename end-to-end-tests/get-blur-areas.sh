@@ -23,6 +23,7 @@ check_image() {
   fi
 }
 
+# Parameter $1 is the host name where to make the requests to, received by the script.
 check_image $1 "MultiplePeople.jpg" "MultiplePeople.txt"
 check_image $1 "OnePerson.png" "OnePerson.txt"
 check_image $1 "GithubBranching.png" "GithubBranching.txt"
