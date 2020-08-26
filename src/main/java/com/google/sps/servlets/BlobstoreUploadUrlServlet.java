@@ -17,46 +17,44 @@ package com.google.sps.servlets;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import java.io.IOException;
-import java.io.PrintWriter;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.lang.IllegalArgumentException;
 
 @WebServlet("/blobstore-upload-url")
 public class BlobstoreUploadUrlServlet extends HttpServlet {
 
-    /**
-     * Expects forwardurl parameter: the url to redirect after the user uploaded the file.
-     * Responds with an URL that uploads a file to blobstore and redirects to forwardurl.
-     */
-    @Override
-    public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        String forwardUrl = request.getParameter("forwardurl");
+  /**
+   * Expects forwardurl parameter: the url to redirect after the user uploaded a file. Responds with
+   * an URL that uploads a file to blobstore and redirects to forwardurl.
+   */
+  @Override
+  public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
+    String forwardUrl = request.getParameter("forwardurl");
 
-        // If forwardurl is not provided, throw an error.
-        if (forwardUrl == null) {
-            response.setContentType("text/html;");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().println("ERROR: forwardurl parameter not provided!");
-            return;
-        }
-        
-        BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-        String uploadUrl;
-
-        // Exception is thrown if forwardurl is invalid.
-        try {
-            uploadUrl = blobstoreService.createUploadUrl(forwardUrl);
-        } catch (IllegalArgumentException e) {
-            response.setContentType("text/html;");
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().println("ERROR: forwardurl parameter is invalid!");
-            return;
-        }
-
-        response.setContentType("text/html");
-        response.getWriter().println(uploadUrl);
+    // If forwardurl is not provided, throw an error.
+    if (forwardUrl == null) {
+      response.setContentType("text/html;");
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      response.getWriter().println("ERROR: forwardurl parameter not provided!");
+      return;
     }
+
+    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
+    String uploadUrl;
+
+    // Exception is thrown if forwardurl is invalid.
+    try {
+      uploadUrl = blobstoreService.createUploadUrl(forwardUrl);
+    } catch (IllegalArgumentException e) {
+      response.setContentType("text/html;");
+      response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+      response.getWriter().println("ERROR: forwardurl parameter is invalid!");
+      return;
+    }
+
+    response.setContentType("text/html");
+    response.getWriter().println(uploadUrl);
+  }
 }
