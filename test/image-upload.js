@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-describe('image upload validation', function () {
+describe('image upload validation', function() {
   /**
    * Helper function to get Blob from path or url.
    * Promise resolves with that blob.
@@ -20,14 +20,14 @@ describe('image upload validation', function () {
    * @return {Promise}
    */
   async function getFileBlob(url) {
-    return new Promise(function (resolve, reject) {
+    return new Promise(function(resolve, reject) {
       // create request for that blob
       const xhr = new XMLHttpRequest();
       xhr.open('GET', url);
       xhr.responseType = 'blob';
 
       // wait until request loads and return blob
-      xhr.addEventListener('load', function () {
+      xhr.addEventListener('load', function() {
         resolve(xhr.response);
       });
 
@@ -57,13 +57,13 @@ describe('image upload validation', function () {
   function addFileToInputElement(file) {
     const dataTransfer = new DataTransfer();
     dataTransfer.items.add(file);
-    let imageUpload = document.getElementById('upload-image');
+    const imageUpload = document.getElementById('upload-image');
     imageUpload.files = dataTransfer.files;
   }
 
   // This function is used inside the validation function
-  describe('#getExtensionIfSupported()', function () {
-    it('jpeg extension', async function () {
+  describe('#getExtensionIfSupported()', function() {
+    it('jpeg extension', async function() {
       const jpegImage = await getFileObject('test-files/90kb.jpeg');
 
       await getExtensionIfSupported(jpegImage).then((extension) => {
@@ -71,7 +71,7 @@ describe('image upload validation', function () {
       });
     });
 
-    it('png extension', async function () {
+    it('png extension', async function() {
       const pngImage = await getFileObject('test-files/537kb.png');
 
       await getExtensionIfSupported(pngImage).then((extension) => {
@@ -79,7 +79,7 @@ describe('image upload validation', function () {
       });
     });
 
-    it('not an image', async function () {
+    it('not an image', async function() {
       const notImage = await getFileObject('test-files/not-image.txt');
 
       await getExtensionIfSupported(notImage).catch((error) => {
@@ -92,7 +92,7 @@ describe('image upload validation', function () {
 
     // File objects in js have type property, but
     // it can be changed, our validation function can not be fooled so easily
-    it('not an image but type is set to image', async function () {
+    it('not an image but type is set to image', async function() {
       const notImage = new File([], 'file.jpeg', {
         type: 'image/jpeg',
       });
@@ -106,10 +106,9 @@ describe('image upload validation', function () {
     });
   });
 
-  describe('empty input', function () {
-    it('no file selected', async function () {
+  describe('empty input', function() {
+    it('no file selected', async function() {
       await validateImageUpload().catch((error) => {
-
         expect(() => {
           throw error;
         }).to.throw('Nothing is uploaded');
@@ -117,8 +116,8 @@ describe('image upload validation', function () {
     });
   });
 
-  describe('too big dimentions', function () {
-    it('too big width, normal size', async function () {
+  describe('too big dimentions', function() {
+    it('too big width, normal size', async function() {
       const image = await getFileObject('test-files/500kb_large_width.jpg');
       addFileToInputElement(image);
 
@@ -130,7 +129,7 @@ describe('image upload validation', function () {
       });
     });
 
-    it('too big height, normal size', async function () {
+    it('too big height, normal size', async function() {
       const image = await getFileObject('test-files/500kb_large_height.jpg');
       addFileToInputElement(image);
 
@@ -144,8 +143,8 @@ describe('image upload validation', function () {
   });
 
   // Max sizes for jpg and png images are different
-  describe('too big size', function () {
-    it('too big png image', async function () {
+  describe('too big size', function() {
+    it('too big png image', async function() {
       const pngImage = await getFileObject('test-files/36mb_large_dim.png');
       addFileToInputElement(pngImage);
 
@@ -157,7 +156,7 @@ describe('image upload validation', function () {
       });
     });
 
-    it('too big jpg image', async function () {
+    it('too big jpg image', async function() {
       const jpgImage = await getFileObject('test-files/6mb_large_dim.jpg');
       addFileToInputElement(jpgImage);
 
@@ -170,8 +169,8 @@ describe('image upload validation', function () {
     });
   });
 
-  describe('valid image', function () {
-    it('valid image', async function () {
+  describe('valid image', function() {
+    it('valid image', async function() {
       const image = await getFileObject('test-files/64kb.jpg');
       addFileToInputElement(image);
 

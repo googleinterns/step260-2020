@@ -50,7 +50,6 @@ async function handleImageUpload(event) {
     // if image is valid - put it on page
     const imageUrl = URL.createObjectURL(event.target.files[0]);
     putImageOnPage(imageUrl);
-
   }).catch((error) => {
     // if image is not valid - display error message
     alert(error.message);
@@ -97,10 +96,10 @@ async function validateImageUpload() {
  * @return {Promise}
  */
 function getExtensionIfSupported(file) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     const fileReader = new FileReader();
 
-    fileReader.onloadend = function (e) {
+    fileReader.onloadend = function(e) {
       // get first 4 bytes from file - they contain information
       // about the extension.
       const bytes = new Uint8Array(e.target.result);
@@ -116,12 +115,14 @@ function getExtensionIfSupported(file) {
         resolve('png');
       }
 
-      const JPEG_HEADERS = ['ffd8ffe0', 'ffd8ffe1', 'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
+      const JPEG_HEADERS = ['ffd8ffe0', 'ffd8ffe1',
+        'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
       if (JPEG_HEADERS.includes(header)) {
         resolve('jpeg');
       }
 
-      reject(new Error('Invalid file extension. Only jpeg and png images can be uploaded'));
+      reject(new Error(
+          'Invalid file extension. Only jpeg and png images can be uploaded'));
     };
 
     // read first 4 bytes from file
@@ -137,19 +138,21 @@ function getExtensionIfSupported(file) {
  * @return {Promise}
  */
 function validateImageDimensions(imageFile) {
-  return new Promise(function (resolve, reject) {
+  return new Promise(function(resolve, reject) {
     // construct image object from the file
     const imageObject = new Image();
     const imageUrl = URL.createObjectURL(imageFile);
 
-    imageObject.onload = function () {
+    imageObject.onload = function() {
       if (imageObject.width > 1920) {
-        reject(new Error('Uploaded file width are too big. Maximum width can be 1920px'));
+        reject(new Error(
+            'Uploaded file width are too big. Maximum width can be 1920px'));
         return;
       }
 
       if (imageObject.height > 1920) {
-        reject(new Error('Uploaded file height are too big. Maximum height can be 1920px'));
+        reject(new Error(
+            'Uploaded file height are too big. Maximum height can be 1920px'));
       }
 
       resolve();
