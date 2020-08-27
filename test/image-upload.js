@@ -118,6 +118,7 @@ describe('image upload validation', function() {
 
   describe('too big dimentions', function() {
     it('too big width, normal size', async function() {
+      const IMAGE_WIDTH = 1999;
       const image = await getFileObject('test-files/500kb_large_width.jpg');
       addFileToInputElement(image);
 
@@ -125,11 +126,13 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'Uploaded file width are too big. Maximum width can be 1920px');
+            'The width of an image can not exceed 1920px. The width of ' +
+            'an uploaded image is' + IMAGE_WIDTH + 'px');
       });
     });
 
     it('too big height, normal size', async function() {
+      const IMAGE_HEIGHT = 1999;
       const image = await getFileObject('test-files/500kb_large_height.jpg');
       addFileToInputElement(image);
 
@@ -137,7 +140,8 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'Uploaded file height are too big. Maximum height can be 1920px');
+            'The height of an image can not exceed 1080px. The height of ' +
+            'an uploaded image is' + IMAGE_HEIGHT + 'px');
       });
     });
   });
@@ -152,7 +156,9 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'Uploaded png file size can not exceed 8MB');
+            'File size should not exceed 8MB for png images.' +
+            'The size of an uploaded png image is ' +
+            Math.ceil(pngImage.size / 1024 / 1024) + 'MB');
       });
     });
 
@@ -164,7 +170,9 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'Uploaded jpeg file size can not exceed 2MB');
+            'File size should not exceed 2MB for jpeg images.' +
+            'The size of an uploaded jpeg image is ' +
+            Math.ceil(jpgImage.size / 1024 / 1024) + 'MB');
       });
     });
   });

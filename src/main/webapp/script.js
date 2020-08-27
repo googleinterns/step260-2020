@@ -90,11 +90,15 @@ async function validateImageUpload() {
  */
 function validateImageSize(image, imageType) {
   if (imageType === 'png' && image.size > 8 * 1024 * 1024) {
-    throw new Error('Uploaded png file size can not exceed 8MB');
+    throw new Error('File size should not exceed 8MB for png images.' +
+        'The size of an uploaded png image is ' +
+        Math.ceil(image.size / 1024 / 1024) + 'MB');
   }
 
   if (imageType === 'jpeg' && image.size > 2 * 1024 * 1024) {
-    throw new Error('Uploaded jpeg file size can not exceed 2MB');
+    throw new Error('File size should not exceed 2MB for jpeg images.' +
+        'The size of an uploaded jpeg image is ' +
+        Math.ceil(image.size / 1024 / 1024) + 'MB');
   }
 }
 
@@ -140,7 +144,8 @@ function getImageTypeOrError(file) {
 }
 
 /**
- * Function to make sure the file height and width are <= 1920px.
+ * Function to make sure the image dimensions are no
+ * more than 1920 x 1080
  * Promise returns error if this is not true and
  * nothing otherwise.
  * @param {File} imageFile
@@ -155,13 +160,15 @@ function validateImageDimensions(imageFile) {
     imageObject.onload = function() {
       if (imageObject.width > 1920) {
         reject(new Error(
-            'Uploaded file width are too big. Maximum width can be 1920px'));
+            'The width of an image can not exceed 1920px. The width of ' +
+            'an uploaded image is' + imageObject.width + 'px'));
         return;
       }
 
-      if (imageObject.height > 1920) {
+      if (imageObject.height > 1080) {
         reject(new Error(
-            'Uploaded file height are too big. Maximum height can be 1920px'));
+            'The height of an image can not exceed 1080px. The height of ' +
+            'an uploaded image is' + imageObject.height + 'px'));
       }
 
       resolve();
