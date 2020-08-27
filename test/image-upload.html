@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--  include testing module-->
+  <link href="../node_modules/mocha/mocha.css" rel="stylesheet"/>
+  <script src="../node_modules/mocha/mocha.js"></script>
+  <script>
+    // enable testing style BDD
+    mocha.setup('bdd');
+  </script>
+  <!--  include assertion library-->
+  <script src="../node_modules/chai/chai.js"></script>
+  <script>
+    const expect = chai.expect;
+  </script>
+</head>
+<body>
+
+<input type="file" id="upload-image"/>
+<div id="images-container"></div>
+
+<!--  script we want to test-->
+<script src="../src/main/webapp/script.js">
+</script>
+
+
+<!--  testing script-->
+<script src="image-upload.js"></script>
+
+<!--  this element will display test results-->
+<div id="mocha"></div>
+
+<!--  run tests-->
+<script>
+  mocha.run();
+</script>
+</body>
+
+</html>
