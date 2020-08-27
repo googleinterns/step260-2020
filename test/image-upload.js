@@ -62,11 +62,11 @@ describe('image upload validation', function() {
   }
 
   // This function is used inside the validation function
-  describe('#getExtensionIfSupported()', function() {
+  describe('#getImageTypeOrError()', function() {
     it('jpeg extension', async function() {
       const jpegImage = await getFileObject('test-files/90kb.jpeg');
 
-      await getExtensionIfSupported(jpegImage).then((extension) => {
+      await getImageTypeOrError(jpegImage).then((extension) => {
         expect(extension).to.equal('jpeg');
       });
     });
@@ -74,7 +74,7 @@ describe('image upload validation', function() {
     it('png extension', async function() {
       const pngImage = await getFileObject('test-files/537kb.png');
 
-      await getExtensionIfSupported(pngImage).then((extension) => {
+      await getImageTypeOrError(pngImage).then((extension) => {
         expect(extension).to.equal('png');
       });
     });
@@ -82,11 +82,11 @@ describe('image upload validation', function() {
     it('not an image', async function() {
       const notImage = await getFileObject('test-files/not-image.txt');
 
-      await getExtensionIfSupported(notImage).catch((error) => {
+      await getImageTypeOrError(notImage).catch((error) => {
         expect(() => {
           throw error;
         }).to.throw(
-            'Invalid file extension. Only jpeg and png images can be uploaded');
+            'Invalid file type. Only jpeg and png images can be uploaded');
       });
     });
 
@@ -97,11 +97,11 @@ describe('image upload validation', function() {
         type: 'image/jpeg',
       });
 
-      await getExtensionIfSupported(notImage).catch((error) => {
+      await getImageTypeOrError(notImage).catch((error) => {
         expect(() => {
           throw error;
         }).to.throw(
-            'Invalid file extension. Only jpeg and png images can be uploaded');
+            'Invalid file type. Only jpeg and png images can be uploaded');
       });
     });
   });

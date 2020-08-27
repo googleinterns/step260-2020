@@ -74,28 +74,37 @@ async function validateImageUpload() {
   const file = files[0];
 
   // check whether file is jpeg or png.
-  const extension = await getExtensionIfSupported(file);
+  const fileType = await getImageTypeOrError(file);
 
   // check file size.
-  if (extension === 'png' && file.size > 8 * 1024 * 1024) {
-    throw new Error('Uploaded png file size can not exceed 8MB');
-  }
-
-  if (extension === 'jpeg' && file.size > 2 * 1024 * 1024) {
-    throw new Error('Uploaded jpeg file size can not exceed 2MB');
-  }
+  validateImageSize(file, fileType);
 
   // File height or width can not be more than 1920px.
   await validateImageDimensions(file);
 }
 
 /**
- * Function to get file extension if it is png or jpeg
+ * Function to make sure the image is not too big.
+ * @param {File} image
+ * @param {string} imageType Can be 'png' or 'jpeg' only.
+ */
+function validateImageSize(image, imageType) {
+  if (imageType === 'png' && image.size > 8 * 1024 * 1024) {
+    throw new Error('Uploaded png file size can not exceed 8MB');
+  }
+
+  if (imageType === 'jpeg' && image.size > 2 * 1024 * 1024) {
+    throw new Error('Uploaded jpeg file size can not exceed 2MB');
+  }
+}
+
+/**
+ * Function to get file type if it is png or jpeg
  * and throw error otherwise
  * @param {File} file
  * @return {Promise}
  */
-function getExtensionIfSupported(file) {
+function getImageTypeOrError(file) {
   return new Promise(function(resolve, reject) {
     const fileReader = new FileReader();
 
@@ -122,7 +131,7 @@ function getExtensionIfSupported(file) {
       }
 
       reject(new Error(
-          'Invalid file extension. Only jpeg and png images can be uploaded'));
+          'Invalid file type. Only jpeg and png images can be uploaded'));
     };
 
     // read first 4 bytes from file
