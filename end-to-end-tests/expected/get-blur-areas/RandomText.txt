@@ -1,0 +1,2 @@
+Image type <text/plain> not supported.
+Types supported: [image/jpeg, image/png]
