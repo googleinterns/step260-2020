@@ -116,9 +116,10 @@ describe('image upload validation', function() {
     });
   });
 
-  describe('too big dimentions', function() {
-    it('too big width, normal size', async function() {
+  describe('too big resolution', function() {
+    it('too big resolution, normal size', async function() {
       const IMAGE_WIDTH = 1999;
+      const IMAGE_HEIGHT = 1203;
       const image = await getFileObject('test-files/500kb_large_width.jpg');
       addFileToInputElement(image);
 
@@ -126,22 +127,9 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'The width of an image can not exceed 1920px. The width of ' +
-            'an uploaded image is' + IMAGE_WIDTH + 'px');
-      });
-    });
-
-    it('too big height, normal size', async function() {
-      const IMAGE_HEIGHT = 1999;
-      const image = await getFileObject('test-files/500kb_large_height.jpg');
-      addFileToInputElement(image);
-
-      await validateImageUpload().catch((error) => {
-        expect(() => {
-          throw error;
-        }).to.throw(
-            'The height of an image can not exceed 1080px. The height of ' +
-            'an uploaded image is' + IMAGE_HEIGHT + 'px');
+            'The image resolution can not exceed 1920x1080px. ' +
+            'The uploaded image resolution is ' +
+            IMAGE_WIDTH + 'x' + IMAGE_HEIGHT + 'px');
       });
     });
   });
