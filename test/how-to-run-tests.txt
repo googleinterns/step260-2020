@@ -1,4 +1,4 @@
-Just open test/--testname--.html file in the browser.
+Just open test/test.html file in the browser.
 You will see all the test results on that page.
 
 All the tests are written in test/--testname--.js file.
