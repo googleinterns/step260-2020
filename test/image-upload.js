@@ -14,42 +14,6 @@
 
 describe('image upload validation', function() {
   /**
-   * Helper function to get Blob from path or url.
-   * Promise resolves with that blob.
-   * @param {string} url
-   * @return {Promise}
-   */
-  async function getFileBlob(url) {
-    return new Promise(function(resolve, reject) {
-      // create request for that blob
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', url);
-      xhr.responseType = 'blob';
-
-      // wait until request loads and return blob
-      xhr.addEventListener('load', function() {
-        resolve(xhr.response);
-      });
-
-      xhr.send();
-    });
-  }
-
-  /**
-   * Helper function to get File object from
-   * path or url.
-   * Promise resolves with that File.
-   * @param {string} filePathOrUrl
-   * @return {Promise}
-   */
-  async function getFileObject(filePathOrUrl) {
-    const blob = await getFileBlob(filePathOrUrl);
-    blob.lastModifiedDate = new Date();
-
-    return new File([blob], 'my-file');
-  }
-
-  /**
    * Helper function to add file to the
    * input element on html page.
    * @param {File} file
