@@ -70,7 +70,7 @@ describe('Connection with server part', () => {
 
   describe('getFormUploadUrl()', () => {
     it('check that it fetchs expected url using get method' +
-        'and gets response from it', async() => {
+        'and gets response from it', async () => {
       const FETCH_URL = '/blobstore-upload-url?forwardurl=/get-blur-areas';
       const RESPONSE_URL = 'someUrl';
       fetchMock.get(FETCH_URL, RESPONSE_URL);
@@ -116,7 +116,7 @@ describe('Connection with server part', () => {
   });
 
   describe('getBlurAreas()', () => {
-    before(async() => {
+    before(async () => {
       this.image = await getFileObject('test-files/64kb.jpg');
     });
 
