@@ -23,17 +23,17 @@
 function getFormUploadUrl() {
   return new Promise(function(resolve, reject) {
     const URL_TO_HANDLE_FORM_UPLOAD = '/get-blur-areas';
-    const FETCH_URL_TO_BLOBSTORE = '/blobstore-upload-url?forwardurl='
-        + URL_TO_HANDLE_FORM_UPLOAD;
+    const FETCH_URL_TO_BLOBSTORE = '/blobstore-upload-url?forwardurl=' +
+        URL_TO_HANDLE_FORM_UPLOAD;
 
     fetch(FETCH_URL_TO_BLOBSTORE)
-        .then(async(response) => {
+        .then(async (response) => {
           // if server responded with not 200 status
           if (!response.ok) {
             const errorMessage = await response.text();
             alert(response.status + ' server error : ' + errorMessage);
 
-            reject(response.status + ' server error');
+            reject(new Error(response.status + ' server error'));
             return;
           }
 
@@ -75,7 +75,7 @@ function getBlurAreas(image) {
       body: formData,
     }).then(
         (response) => {
-          (async() => {
+          (async () => {
             // if server responded with not 200 status
             if (!response.ok) {
               const ERROR_MESSAGE = response.status + ' server error';
@@ -90,11 +90,11 @@ function getBlurAreas(image) {
               throw new Error(ERROR_MESSAGE);
             }
 
-            return response.json()
+            return response.json();
           })().then(
               (jsonBlurAreas) => {
                 if (!Array.isArray(jsonBlurAreas)) {
-                  reject('Broken json');
+                  reject(new Error('Broken json'));
                   return;
                 }
 
@@ -104,8 +104,7 @@ function getBlurAreas(image) {
                 const imageUrl = URL.createObjectURL(image);
 
                 imageObject.onload = function() {
-
-                  let blurAreas = [];
+                  const blurAreas = [];
 
                   for (const jsonRect of jsonBlurAreas) {
                     let rect;
@@ -132,10 +131,11 @@ function getBlurAreas(image) {
               (error) => {
                 if (error.message !== response.status + ' server error') {
                   alert('Unknown error while parsing results.' +
-                      '\nPlease reload the page and try again after some time.');
+                      '\nPlease reload the page and try again ' +
+                      'after some time.');
                   reject(error);
                 }
-              }
+              },
           );
         },
 
@@ -143,7 +143,7 @@ function getBlurAreas(image) {
           alert('Unknown error while uploading image.' +
               '\nPlease reload the page and try again after some time.');
           reject(error);
-        }
+        },
     );
   });
 }
@@ -153,7 +153,7 @@ function getBlurAreas(image) {
  * Takes as parameter rectangle from server - array with 4 points,
  * point is an object with properties 'x' and 'y'.
  * Validates rectangle from server.
- * @param {Rectangle from server response} rect
+ * @param {Array<Object>} rect
  * @param {Image} image
  * @constructor
  */
