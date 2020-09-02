@@ -86,7 +86,7 @@ async function validateImageUpload() {
   validateImageSize(file, fileType);
 
   // Image resolution can not be more than 1920x1080.
-  await validateImageResolution(file);
+  await validateImageResolution(file, 1920, 1080);
 }
 
 /**
@@ -161,22 +161,26 @@ function getImageTypeOrError(file) {
 
 /**
  * Function to make sure the image resolution is no
- * more than 1920 x 1080 (Full HD)
+ * more than mxWidth x mxHeight
  * Promise returns error if this is not true and
  * nothing otherwise.
  * @param {File} imageFile
+ * @param {Number} mxWidth
+ * @param {Number} mxHeight
  * @return {Promise}
  */
-function validateImageResolution(imageFile) {
+function validateImageResolution(imageFile, mxWidth, mxHeight) {
   return new Promise(function(resolve, reject) {
     // construct image object from the file
     const imageObject = new Image();
     const imageUrl = URL.createObjectURL(imageFile);
 
     imageObject.onload = function() {
-      if (imageObject.width * imageObject.height > 1920 * 1080) {
+      if (imageObject.width * imageObject.height >
+          mxWidth * mxHeight) {
         reject(new Error(
-            'The image resolution can not exceed 1920x1080px. ' +
+            'The image resolution can not exceed ' + mxWidth +
+            'x' + mxHeight + 'px. ' +
             'The uploaded image resolution is ' +
             imageObject.width + 'x' + imageObject.height + 'px'));
         return;

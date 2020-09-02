@@ -84,6 +84,8 @@ describe('image upload validation', function() {
     it('too big resolution, normal size', async function() {
       const IMAGE_WIDTH = 1999;
       const IMAGE_HEIGHT = 1203;
+      const MX_WIDTH = 1920;
+      const MX_HEIGHT = 1080;
       const image = await getFileObject('test-files/500kb_large_width.jpg');
       addFileToInputElement(image);
 
@@ -91,7 +93,8 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'The image resolution can not exceed 1920x1080px. ' +
+            'The image resolution can not exceed ' + MX_WIDTH +
+            'x' + MX_HEIGHT + 'px. ' +
             'The uploaded image resolution is ' +
             IMAGE_WIDTH + 'x' + IMAGE_HEIGHT + 'px');
       });
