@@ -47,3 +47,20 @@ async function getFileObject(filePathOrUrl) {
 
   return new File([blob], 'my-file');
 }
+
+/**
+ * Helper function to get image object from
+ * image represented by path (e.g. 'images/image.jpg').
+ * @param {string} path
+ * @return {Promise<Image>} image
+ */
+function getImageFromPath(path) {
+  return new Promise(function(resolve, reject) {
+    const image = new Image();
+    image.src = path;
+
+    image.onload = function() {
+      resolve(image);
+    }
+  });
+}

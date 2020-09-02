@@ -2,6 +2,7 @@
 <html>
 <head>
   <title>Image upload testing</title>
+
   <!--  include testing module-->
   <link href="../node_modules/mocha/mocha.css" rel="stylesheet"/>
   <script src="../node_modules/mocha/mocha.js"></script>
@@ -9,13 +10,20 @@
     // enable testing style BDD
     mocha.setup('bdd');
   </script>
+
   <!--  include assertion library-->
   <script src="../node_modules/chai/chai.js"></script>
   <script>
     const expect = chai.expect;
   </script>
+
   <!--    include library for mocking fetch calls-->
   <script src="../node_modules/fetch-mock/es5/client-bundle.js"></script>
+  <!--    include library to get average color of an image-->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js">
+  </script>
+  <!--    include library to compare images-->
+  <script src="../node_modules/resemblejs/resemble.js"></script>
 </head>
 <body>
 
@@ -27,6 +35,8 @@
 </script>
 <script src="../src/main/webapp/get-blur-areas.js">
 </script>
+<script src="../src/main/webapp/blur.js">
+</script>
 
 <!--  script with functions to help testing-->
 <script src="helpers.js"></script>
@@ -34,6 +44,7 @@
 <!--  testing scripts-->
 <script src="image-upload.js"></script>
 <script src="get-blur-areas.js"></script>
+<script src="blurring-method.js"></script>
 
 <!--  this element will display test results-->
 <div id="mocha"></div>
