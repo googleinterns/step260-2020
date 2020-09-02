@@ -14,19 +14,26 @@
   <script>
     const expect = chai.expect;
   </script>
+  <!--    include library for mocking fetch calls-->
+  <script src="../node_modules/fetch-mock/es5/client-bundle.js"></script>
 </head>
 <body>
 
 <input type="file" id="upload-image"/>
 <div id="images-container"></div>
 
-<!--  script we want to test-->
+<!--  scripts we want to test-->
 <script src="../src/main/webapp/script.js">
 </script>
+<script src="../src/main/webapp/get-blur-areas.js">
+</script>
 
+<!--  script with functions to help testing-->
+<script src="helpers.js"></script>
 
-<!--  testing script-->
+<!--  testing scripts-->
 <script src="image-upload.js"></script>
+<script src="get-blur-areas.js"></script>
 
 <!--  this element will display test results-->
 <div id="mocha"></div>

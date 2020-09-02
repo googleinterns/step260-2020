@@ -46,10 +46,16 @@ document.addEventListener('DOMContentLoaded', () => {
  * @param {Event} event "Change" event on image upload button.
  */
 async function handleImageUpload(event) {
-  await validateImageUpload().then(() => {
+  await validateImageUpload().then(async () => {
     // if image is valid - put it on page
     const imageUrl = URL.createObjectURL(event.target.files[0]);
     putImageOnPage(imageUrl);
+
+    // and then send it to server to get blur areas
+    const blurAreas = await getBlurAreas(event.target.files[0]);
+
+    // do smth with those blur areas
+    console.log(blurAreas);
   }).catch((error) => {
     // if image is not valid - display error message
     alert(error.message);
