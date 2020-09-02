@@ -12,6 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "getFileObject" }] */
+
+'use strict';
+
 /**
  * Helper function to get Blob from path or url.
  * Promise resolves with that blob.
@@ -19,7 +23,7 @@
  * @return {Promise}
  */
 async function getFileBlob(url) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     // create request for that blob
     const xhr = new XMLHttpRequest();
     xhr.open('GET', url);
