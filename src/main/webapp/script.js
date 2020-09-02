@@ -20,7 +20,6 @@
  * Add canvases to the page, put sample image to them.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
   const CANVAS_WIDTH = 300;
 
   const uploadButton = document.getElementById('upload-image');
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
   imagesContainer.append(outputCanvas);
 
   // add sample image on page - original and blurred one.
-  putImageOnPage(SAMPLE_IMAGE_URL);
+  putSampleImagesOnPage();
 });
 
 /**
@@ -47,15 +46,8 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // if image is valid - put it on page
-    const imageUrl = URL.createObjectURL(event.target.files[0]);
-    putImageOnPage(imageUrl);
-
-    // and then send it to server to get blur areas
-    const blurAreas = await getBlurAreas(event.target.files[0]);
-
-    // do smth with those blur areas
-    console.log(blurAreas);
+    // if image is valid - put it on page (original and blurred one).
+    putImageOnPageAndBlur(event.target.files[0]);
   }).catch((error) => {
     // if image is not valid - display error message
     alert(error.message);
@@ -206,19 +198,57 @@ function createCanvasForId(id) {
 }
 
 /**
- * Function to draw image on input canvas.
- * @param {string} imageUrl
+ * Function to blur image and put on page
+ * original and blurred images
+ * @param {File} imageFile
  */
-async function putImageOnPage(imageUrl) {
+async function putImageOnPageAndBlur(imageFile) {
+  const imageUrl = URL.createObjectURL(imageFile);
+
   // create Image object from url to put it on canvas.
   const imageObj = new Image();
   imageObj.src = imageUrl;
 
   // need to wait until image loads to put it anywhere.
-  imageObj.onload = () => {
+  imageObj.onload = async () => {
     const inputCanvas = document.getElementById('input-canvas');
     drawImageOnCanvas(imageObj, inputCanvas);
+
+    const blurAreas = await getBlurAreas(imageFile);
+
+    const blurredImage = getImageWithBlurredAreas(blurAreas, imageObj);
+
+    const outputCanvas = document.getElementById('output-canvas');
+    drawImageOnCanvas(blurredImage, outputCanvas);
   };
+}
+
+/**
+ * Function to draw sample image (blurred and not blurred)
+ * on input and output canvases.
+ */
+async function putSampleImagesOnPage() {
+  const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
+  const BLURRED_SAMPLE_IMAGE_URL = 'images/blurred-hadgehog.png';
+
+  /**
+   * @param {string} imageUrl
+   * @param {string} canvasId
+   */
+  const putImageOnCanvas = (imageUrl, canvasId) => {
+    // create Image object from url to put it on canvas.
+    const imageObj = new Image();
+    imageObj.src = imageUrl;
+
+    // need to wait until image loads to put it anywhere.
+    imageObj.onload = () => {
+      const canvas = document.getElementById(canvasId);
+      drawImageOnCanvas(imageObj, canvas);
+    };
+  };
+
+  putImageOnCanvas(SAMPLE_IMAGE_URL, 'input-canvas');
+  putImageOnCanvas(BLURRED_SAMPLE_IMAGE_URL, 'output-canvas');
 }
 
 /**
