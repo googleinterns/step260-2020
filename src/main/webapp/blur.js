@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint no-unused-vars:
+["error", { "varsIgnorePattern": "getImageWithBlurredAreas" }] */
+
 'use strict';
 
 /**
@@ -20,7 +23,7 @@
  * @param {Image} image
  * @return {HTMLCanvasElement}
  */
-function createCanvasForImage(image){
+function createCanvasForImage(image) {
   const canvas = document.createElement('canvas');
   canvas.width = image.width;
   canvas.height = image.height;
@@ -60,10 +63,10 @@ function getAverageColor(image) {
   const colorThief = new ColorThief();
   const averageColorRgb = colorThief.getColor(image);
 
-  const rgbToHex = (r, g, b) => '#' + [r, g, b].map(x => {
+  const rgbToHex = (r, g, b) => ('#' + [r, g, b].map((x) => {
     const hex = x.toString(16);
     return hex.length === 1 ? '0' + hex : hex;
-  }).join('');
+  }).join(''));
 
   return rgbToHex(...averageColorRgb);
 }

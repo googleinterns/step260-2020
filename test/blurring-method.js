@@ -86,6 +86,10 @@ describe('blurring method', function() {
     },
   ];
 
+  /**
+   * Function to generate tests from test cases above.
+   * @param {Object} testCase
+   */
   function makeTest(testCase) {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
@@ -93,15 +97,16 @@ describe('blurring method', function() {
         const inputImage = await getImageFromPath(testCase.inputImageUrl);
         const expectedImage = await getFileBlob(testCase.expectedImageUrl);
 
-        getImageWithBlurredAreas(rectsToBlur, inputImage).toBlob(async function(blurredImage) {
-          resemble(expectedImage)
-              .compareTo(blurredImage)
-              .onComplete(function(data) {
-                // expected and blurred images must be 100% equal.
-                expect((parseInt(data.misMatchPercentage))).to.equal(0);
-                resolve();
-              });
-        });
+        getImageWithBlurredAreas(rectsToBlur, inputImage).toBlob(
+            async function(blurredImage) {
+              resemble(expectedImage)
+                  .compareTo(blurredImage)
+                  .onComplete(function(data) {
+                    // expected and blurred images must be 100% equal.
+                    expect((parseInt(data.misMatchPercentage))).to.equal(0);
+                    resolve();
+                  });
+            });
       });
     });
   }

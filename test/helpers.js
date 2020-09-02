@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "getFileObject" }] */
+/* eslint no-unused-vars:
+["error", { "varsIgnorePattern": "getFileObject|getImageFromPath" }] */
 
 'use strict';
 
@@ -59,12 +60,12 @@ async function getFileObject(filePathOrUrl) {
  * @return {Promise<Image>} image
  */
 function getImageFromPath(path) {
-  return new Promise(function(resolve, reject) {
+  return new Promise(function(resolve) {
     const image = new Image();
     image.src = path;
 
     image.onload = function() {
       resolve(image);
-    }
+    };
   });
 }
