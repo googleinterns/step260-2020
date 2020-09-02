@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "getBlurAreas" }] */
+
 'use strict';
 
 /**
