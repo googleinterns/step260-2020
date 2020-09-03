@@ -20,6 +20,7 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.cloud.vision.v1.AnnotateImageRequest.Builder;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
 import com.google.cloud.vision.v1.BoundingPoly;
@@ -142,19 +143,31 @@ public class GetBlurAreasServlet extends HttpServlet {
     ByteString byteString = ByteString.copyFrom(imageBytes);
     Image image = Image.newBuilder().setContent(byteString).build();
 
-    // Create an array of requests containing our features for the batchAnnotateImages function.
-    List<AnnotateImageRequest> requests = new ArrayList<>();
+    // This will hold the image and the features we want to detect.
+    Builder requestBuilder = AnnotateImageRequest.newBuilder();
 
-    // Check which parts our bitmask contains and add the corresponding features to requests array.
+    // Check which parts our bitmask contains and add the corresponding features to requestBuilder.
     if ((partsToBlurMask & FACE_BLUR_MASK) != 0) {
-      requests.add(createAnnotateImageRequest(image, Feature.Type.FACE_DETECTION));
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.FACE_DETECTION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
     }
     if ((partsToBlurMask & PLATE_BLUR_MASK) != 0) {
-      requests.add(createAnnotateImageRequest(image, Feature.Type.OBJECT_LOCALIZATION));
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.OBJECT_LOCALIZATION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
     }
     if ((partsToBlurMask & LOGO_BLUR_MASK) != 0) {
-      requests.add(createAnnotateImageRequest(image, Feature.Type.LOGO_DETECTION));
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.LOGO_DETECTION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
     }
+
+    requestBuilder.setImage(image);
+
+    // Create an array of requests containing only ours to pass to the batchAnnotateImages function.
+    List<AnnotateImageRequest> requests = new ArrayList<>();
+    requests.add(requestBuilder.build());
 
     // Annotate the image from our request. Skip if there is any internal error in the API.
     try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
@@ -269,16 +282,6 @@ public class GetBlurAreasServlet extends HttpServlet {
   private void deleteFile(BlobKey blobKey) {
     BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     blobstoreService.delete(blobKey);
-  }
-
-  /**
-   * @param image contains the Image object for which to create our annotation.
-   * @param type contains the feature type of our annotation.
-   */
-  private AnnotateImageRequest createAnnotateImageRequest(Image image, Feature.Type type) {
-    // Setting max results to 0 disables the upper limit.
-    Feature feature = Feature.newBuilder().setType(type).setMaxResults(0).build();
-    return AnnotateImageRequest.newBuilder().addFeatures(feature).setImage(image).build();
   }
 
   /** Returns an ArrayList containing a BoundingPoly's points. */
