@@ -33,8 +33,8 @@ import com.google.cloud.vision.v1.NormalizedVertex;
 import com.google.cloud.vision.v1.Vertex;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
-import java.awt.image.BufferedImage;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -104,14 +104,14 @@ public class GetBlurAreasServlet extends HttpServlet {
     String logoBlur = request.getParameter("logo-blur");
 
     // If the user checked a part to blur, add it to our bitmask.
-    if(faceBlur != null && faceBlur.equals("on")) {
+    if (faceBlur != null && faceBlur.equals("on")) {
       partsToBlurMask |= FACE_BLUR_MASK;
     }
-    if(plateBlur != null && plateBlur.equals("on")) {
-      partsToBlurMask |= PLATE_BLUR_MASK; 
+    if (plateBlur != null && plateBlur.equals("on")) {
+      partsToBlurMask |= PLATE_BLUR_MASK;
     }
-    if(logoBlur != null && logoBlur.equals("on")) {
-      partsToBlurMask |= LOGO_BLUR_MASK; 
+    if (logoBlur != null && logoBlur.equals("on")) {
+      partsToBlurMask |= LOGO_BLUR_MASK;
     }
 
     ArrayList<List<Point>> blurAreas = getBlurAreas(imageBytes, partsToBlurMask);
@@ -133,8 +133,8 @@ public class GetBlurAreasServlet extends HttpServlet {
    * @return an ArrayList of bounding rectangles representing parts to blur. Rectangles are
    *     represented by a list of points. There is no guaranteed order of the points.
    */
-  private ArrayList<List<Point>> getBlurAreas(
-      byte[] imageBytes, Integer partsToBlurMask) throws IOException {
+  private ArrayList<List<Point>> getBlurAreas(byte[] imageBytes, Integer partsToBlurMask)
+      throws IOException {
     // This is the array that we will return.
     ArrayList<List<Point>> rectanglesToBlur = new ArrayList<>();
 
@@ -146,13 +146,13 @@ public class GetBlurAreasServlet extends HttpServlet {
     List<AnnotateImageRequest> requests = new ArrayList<>();
 
     // Check which parts our bitmask contains and add the corresponding features to requests array.
-    if((partsToBlurMask & FACE_BLUR_MASK) != 0) {
+    if ((partsToBlurMask & FACE_BLUR_MASK) != 0) {
       requests.add(createAnnotateImageRequest(image, Feature.Type.FACE_DETECTION));
     }
-    if((partsToBlurMask & PLATE_BLUR_MASK) != 0) {
+    if ((partsToBlurMask & PLATE_BLUR_MASK) != 0) {
       requests.add(createAnnotateImageRequest(image, Feature.Type.OBJECT_LOCALIZATION));
     }
-    if((partsToBlurMask & LOGO_BLUR_MASK) != 0) {
+    if ((partsToBlurMask & LOGO_BLUR_MASK) != 0) {
       requests.add(createAnnotateImageRequest(image, Feature.Type.LOGO_DETECTION));
     }
 
@@ -182,7 +182,7 @@ public class GetBlurAreasServlet extends HttpServlet {
           if (object.getName().equals("License plate")) {
             ArrayList<Point> points = new ArrayList<>();
             for (NormalizedVertex vertex : object.getBoundingPoly().getNormalizedVerticesList()) {
-              // Localized object bounding polys contain normalized vertices with coordinates in 
+              // Localized object bounding polys contain normalized vertices with coordinates in
               // [0, 1] so we have to denormalize them.
               Integer x = Math.round(vertex.getX() * bufferedImage.getWidth());
               Integer y = Math.round(vertex.getY() * bufferedImage.getHeight());
