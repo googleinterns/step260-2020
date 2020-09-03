@@ -12,14 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// suppress linter error - getBlurAreas function is used from another file
 /* eslint no-unused-vars: ["error", { "varsIgnorePattern": "getBlurAreas" }] */
 
 'use strict';
 
 /**
- * Function to get url to set as the action
- * attribute to form, which uploads
- * image to blobstore.
+ * Function which requests server for a formUploadUrl.
+ * FormUploadUrl is the url that we will fetch to
+ * upload an image.
+ * We need this url, because we use blobstore, and this is
+ * how it works: we first upload the blob to some blobstore
+ * storage (using url from this function), blobstore does its magic,
+ * and then redirects the request to your servlet.
+ * In servlet you can access the uploaded image from that
+ * blobstore storage and not deal with unattractive real files.
  * @return {Promise<string>} url
  */
 function getFormUploadUrl() {
@@ -30,16 +37,16 @@ function getFormUploadUrl() {
 
     fetch(FETCH_URL_TO_BLOBSTORE)
         .then(async (response) => {
-          // if server responded with not 200 status
           if (!response.ok) {
             const errorMessage = await response.text();
-            alert(response.status + ' server error : ' + errorMessage);
+            const errorText = response.status + ' server error';
 
-            reject(new Error(response.status + ' server error'));
+            alert(errorText + ' : ' + errorMessage);
+
+            reject(new Error(errorText));
             return;
           }
 
-          // otherwise get url
           const url = await response.text();
           resolve(url);
         })
@@ -78,7 +85,6 @@ function getBlurAreas(image) {
     }).then(
         (response) => {
           (async () => {
-            // if server responded with not 200 status
             if (!response.ok) {
               const ERROR_MESSAGE = response.status + ' server error';
 
@@ -113,7 +119,9 @@ function getBlurAreas(image) {
                     try {
                       rect = new Rect(jsonRect, imageObject);
                     } catch (error) {
-                      // rectangular is invalid - skip it
+                      // rectangle is invalid - skip it
+                      console.log('Invalid rectangle : ' + error.message,
+                          jsonRect);
                       continue;
                     }
 
@@ -161,30 +169,34 @@ function getBlurAreas(image) {
  */
 function Rect(rect, image) {
   if (!Array.isArray(rect)) {
-    throw new Error('Not a rectangle');
+    throw new Error('Object passed here is not an Array. ' +
+        'It must be an Array of points');
   }
 
   // has 4 points
   if (rect.length !== 4) {
-    throw new Error('Not a rectangle');
+    throw new Error(`Rectangle object must contain exactly 4 corner ` +
+        `points. This rectangle has ${rect.length} points.`);
   }
 
   // points must have x and y properties
   for (const point of rect) {
-    if (!point.hasOwnProperty('x') || !point.hasOwnProperty('y')) {
-      throw new Error('Not a rectangle');
+    if (!point.hasOwnProperty('x')) {
+      throw new Error(`Point ${JSON.stringify(point)} ` +
+      `does not have "x" property`);
+    }
+    if (!point.hasOwnProperty('y')) {
+      throw new Error(`Point ${JSON.stringify(point)} ` +
+          `does not have "y" property`);
     }
   }
 
   // points must not duplicate
-  for (let i = 0; i < rect.length; i++) {
-    for (let j = 0; j < rect.length; j++) {
-      if (i === j) {
-        continue;
-      }
-
+  for (let i = 0; i < 4; i++) {
+    for (let j = 0; j < i; j++) {
       if (rect[i].x === rect[j].x && rect[i].y === rect[j].y) {
-        throw new Error('Not a rectangle');
+        throw new Error(`Duplicate points ${i} : (${rect[i].x}, ${rect[i].y})` +
+            ` and ${j} : (${rect[j].x}, ${rect[j].y})`);
       }
     }
   }
@@ -203,6 +215,9 @@ function Rect(rect, image) {
     bottomY = Math.max(bottomY, point.y);
   }
 
+  this.height = bottomY - this.topY + 1;
+  this.width = rightX - this.leftX + 1;
+
   // all point's x and y must equal minimum or maximum of those values.
   // if points do not duplicate, it's 'x' has 2 options - either leftX
   // or rightX, 'y' has 2 options, those options are not equal, and
@@ -210,26 +225,40 @@ function Rect(rect, image) {
   // then we are sure, that this is a rectangle, parallel to x and y axes.
   for (const point of rect) {
     if (point.x !== this.leftX && point.x !== rightX) {
-      throw new Error('Not a rectangle');
+      throw new Error(`Point's (${point.x}, ${point.y}) "x" property equals ` +
+          `${point.x} which does not equal this rect's` +
+          `minimum (${this.leftX}) or maximum (${rightX}) "x" property => ` +
+          `this is not a rectangle with sides parallel to x and y axes`);
     }
     if (point.y !== this.topY && point.y !== bottomY) {
-      throw new Error('Not a rectangle');
+      throw new Error(`Point's (${point.x}, ${point.y}) "y" property equals ` +
+          `${point.y} which does not equal this rect's` +
+          `minimum (${this.topY}) or maximum (${bottomY}) "y" property => ` +
+          `this is not a rectangle with sides parallel to x and y axes`);
     }
   }
 
   // minimum and maximum of x or y must not equal each other
-  if (this.leftX === rightX || this.topY === bottomY) {
-    throw new Error('Not a rectangle');
+  if (this.leftX === rightX) {
+    throw new Error('All points have the same "x" coordinate');
   }
-
-  this.height = bottomY - this.topY + 1;
-  this.width = rightX - this.leftX + 1;
+  if (this.topY === bottomY) {
+    throw new Error('All points have the same "y" coordinate');
+  }
 
   // rect must not have points outside the image
-  if (this.leftX < 0 || this.topY < 0) {
-    throw new Error('Rect has negative points');
+  if (this.leftX < 0) {
+    throw new Error(`Has negative x point: ${this.leftX}`);
   }
-  if (bottomY > image.height || rightX > image.width) {
-    throw new Error('Rect is greater than image');
+  if (this.topY < 0) {
+    throw new Error(`Has negative y point: ${this.topY}`);
+  }
+  if (rightX > image.width) {
+    throw new Error(`Has x point which is greater than ` +
+        `image width: ${rightX}`);
+  }
+  if (bottomY > image.height) {
+    throw new Error(`Has y point which is greater than ` +
+        `image height: ${bottomY}`);
   }
 }
