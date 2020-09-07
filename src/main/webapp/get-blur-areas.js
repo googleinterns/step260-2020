@@ -86,16 +86,15 @@ function getBlurAreas(image) {
         (response) => {
           (async () => {
             if (!response.ok) {
-              const ERROR_MESSAGE = response.status + ' server error';
+              const errorMessage = await response.text();
+              const errorText = response.status + ' server error';
 
-              reject(ERROR_MESSAGE);
+              alert(errorText + ' : ' + errorMessage);
 
-              // show error
-              const errorMessageFromServer = await response.text();
-              alert(ERROR_MESSAGE + ' ' + errorMessageFromServer);
+              reject(new Error(errorText));
 
               // throw error in order not to go to the next .then() statement
-              throw new Error(ERROR_MESSAGE);
+              throw new Error(errorText);
             }
 
             return response.json();
@@ -176,7 +175,7 @@ function Rect(rect, image) {
   // has 4 points
   if (rect.length !== 4) {
     throw new Error(`Rectangle object must contain exactly 4 corner ` +
-        `points. This rectangle has ${rect.length} points.`);
+        `points. This object has ${rect.length} points.`);
   }
 
   // points must have x and y properties
@@ -195,8 +194,8 @@ function Rect(rect, image) {
   for (let i = 0; i < 4; i++) {
     for (let j = 0; j < i; j++) {
       if (rect[i].x === rect[j].x && rect[i].y === rect[j].y) {
-        throw new Error(`Duplicate points ${i} : (${rect[i].x}, ${rect[i].y})` +
-            ` and ${j} : (${rect[j].x}, ${rect[j].y})`);
+        throw new Error(`Duplicate points : point ${i} = ` +
+            `point ${j} = (${rect[i].x}, ${rect[i].y})`);
       }
     }
   }
@@ -220,30 +219,21 @@ function Rect(rect, image) {
 
   // all point's x and y must equal minimum or maximum of those values.
   // if points do not duplicate, it's 'x' has 2 options - either leftX
-  // or rightX, 'y' has 2 options, those options are not equal, and
-  // rect object has exactly 4 points,
+  // or rightX, 'y' has 2 options, and rect object has exactly 4 points,
   // then we are sure, that this is a rectangle, parallel to x and y axes.
   for (const point of rect) {
     if (point.x !== this.leftX && point.x !== rightX) {
       throw new Error(`Point's (${point.x}, ${point.y}) "x" property equals ` +
-          `${point.x} which does not equal this rect's` +
+          `${point.x} which does not equal this rect's ` +
           `minimum (${this.leftX}) or maximum (${rightX}) "x" property => ` +
           `this is not a rectangle with sides parallel to x and y axes`);
     }
     if (point.y !== this.topY && point.y !== bottomY) {
       throw new Error(`Point's (${point.x}, ${point.y}) "y" property equals ` +
-          `${point.y} which does not equal this rect's` +
+          `${point.y} which does not equal this rect's ` +
           `minimum (${this.topY}) or maximum (${bottomY}) "y" property => ` +
           `this is not a rectangle with sides parallel to x and y axes`);
     }
-  }
-
-  // minimum and maximum of x or y must not equal each other
-  if (this.leftX === rightX) {
-    throw new Error('All points have the same "x" coordinate');
-  }
-  if (this.topY === bottomY) {
-    throw new Error('All points have the same "y" coordinate');
   }
 
   // rect must not have points outside the image
@@ -254,11 +244,11 @@ function Rect(rect, image) {
     throw new Error(`Has negative y point: ${this.topY}`);
   }
   if (rightX > image.width) {
-    throw new Error(`Has x point which is greater than ` +
-        `image width: ${rightX}`);
+    throw new Error(`Has x point (x=${rightX}) which is greater than ` +
+        `image width`);
   }
   if (bottomY > image.height) {
-    throw new Error(`Has y point which is greater than ` +
-        `image height: ${bottomY}`);
+    throw new Error(`Has y point (y=${bottomY}) which is greater than ` +
+        `image height`);
   }
 }
