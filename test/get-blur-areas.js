@@ -54,18 +54,17 @@ describe('Connection with server part', () => {
    * @return {boolean}
    */
   function areRectsEqual(rect1, rect2) {
-    if (!rect1.hasOwnProperty('leftX') || !rect1.hasOwnProperty('topY') ||
-        !rect1.hasOwnProperty('width') || !rect1.hasOwnProperty('height')) {
-      return false;
+    const REQUIRED_PROPERTIES = ['leftX', 'topY', 'width', 'height'];
+
+    for (const property of REQUIRED_PROPERTIES) {
+      if (!rect1.hasOwnProperty(property) ||
+          !rect2.hasOwnProperty(property) ||
+          rect1[property] !== rect2[property]) {
+        return false;
+      }
     }
 
-    if (!rect2.hasOwnProperty('leftX') || !rect2.hasOwnProperty('topY') ||
-        !rect2.hasOwnProperty('width') || !rect2.hasOwnProperty('height')) {
-      return false;
-    }
-
-    return rect1.height === rect2.height && rect1.width === rect2.width &&
-        rect1.topY === rect2.topY && rect1.leftX === rect2.leftX;
+    return true;
   }
 
   describe('getFormUploadUrl()', () => {
@@ -273,7 +272,24 @@ describe('Connection with server part', () => {
         {'x': 20, 'y': 10}, {'x': 20, 'y': 111}];
       const image = new Image();
 
-      expect(() => new Rect(rect, image)).to.throw('Not a rectangle');
+      expect(() => new Rect(rect, image)).to.throw(
+          'Point\'s (10, 20) "y" property equals 20 ' +
+          'which does not equal this rect\'s ' +
+          'minimum (10) or maximum (111) "y" property => ' +
+          'this is not a rectangle with sides parallel to x and y axes');
+    });
+
+    it('not a rectangle - some other polygon with 4 points. ' +
+        'another check triggers', () => {
+      const rect = [{'x': 10, 'y': 10}, {'x': 20, 'y': 10},
+        {'x': 10, 'y': 20}, {'x': 111, 'y': 20}];
+      const image = new Image();
+
+      expect(() => new Rect(rect, image)).to.throw(
+          'Point\'s (20, 10) "x" property equals 20 ' +
+          'which does not equal this rect\'s ' +
+          'minimum (10) or maximum (111) "x" property => ' +
+          'this is not a rectangle with sides parallel to x and y axes');
     });
 
     it('not a rectangle - some other polygon with 5 points', () => {
@@ -281,31 +297,84 @@ describe('Connection with server part', () => {
         {'x': 20, 'y': 10}, {'x': 100, 'y': 100}];
       const image = new Image();
 
-      expect(() => new Rect(rect, image)).to.throw('Not a rectangle');
+      expect(() => new Rect(rect, image)).to.throw(
+          'Rectangle object must contain exactly 4 corner ' +
+          'points. This object has 5 points.');
     });
 
     it('object of not an expected type passed as parameter', () => {
       const someObj = {prop: 'value'};
       const image = new Image();
 
-      expect(() => new Rect(someObj, image)).to.throw('Not a rectangle');
+      expect(() => new Rect(someObj, image)).to.throw(
+          'Object passed here is not an Array. ' +
+          'It must be an Array of points');
     });
 
-    it('rect is greater than image size', () => {
+    it('rect is greater than image width', () => {
       const rect = [{'x': 10, 'y': 10}, {'x': 10, 'y': 20},
         {'x': 100, 'y': 10}, {'x': 100, 'y': 20}];
       const image = new Image(10, 200);
 
       expect(() => new Rect(rect, image)).to.throw(
-          'Rect is greater than image');
+          'Has x point (x=100) which is greater than ' +
+          'image width');
     });
 
-    it('rect has negative top left point', () => {
+    it('rect is greater than image height', () => {
+      const rect = [{'x': 10, 'y': 10}, {'x': 10, 'y': 20},
+        {'x': 100, 'y': 10}, {'x': 100, 'y': 20}];
+      const image = new Image(100, 1);
+
+      expect(() => new Rect(rect, image)).to.throw(
+          'Has y point (y=20) which is greater than ' +
+          'image height');
+    });
+
+    it('rect has negative top left x point', () => {
       const rect = [{'x': -10, 'y': 10}, {'x': -10, 'y': 20},
         {'x': 20, 'y': 10}, {'x': 20, 'y': 20}];
       const image = new Image();
 
-      expect(() => new Rect(rect, image)).to.throw('Rect has negative points');
+      expect(() => new Rect(rect, image)).to.throw('Has negative x point: -10');
+    });
+
+    it('rect has negative top left y point', () => {
+      const rect = [{'x': 10, 'y': -10}, {'x': 10, 'y': 20},
+        {'x': 20, 'y': -10}, {'x': 20, 'y': 20}];
+      const image = new Image();
+
+      expect(() => new Rect(rect, image)).to.throw('Has negative y point: -10');
+    });
+
+    it('first point does not have x property', () => {
+      const rect = [{'notxproperty': 10, 'y': 10}, {'x': 10, 'y': 20},
+        {'x': 20, 'y': 10}, {'x': 20, 'y': 20}];
+      const image = new Image();
+
+      expect(() => new Rect(rect, image)).to.throw(
+          'Point {"notxproperty":10,"y":10} ' +
+          'does not have "x" property');
+    });
+
+    it('second point does not have y property', () => {
+      const rect = [{'x': 10, 'y': 10}, {'x': 10, 'notyproperty': 20},
+        {'x': 20, 'y': 10}, {'x': 20, 'y': 20}];
+      const image = new Image();
+
+      expect(() => new Rect(rect, image)).to.throw(
+          'Point {"x":10,"notyproperty":20} ' +
+          'does not have "y" property');
+    });
+
+    it('first and second points are equal', () => {
+      const rect = [{'x': 10, 'y': 10}, {'x': 10, 'y': 10},
+        {'x': 20, 'y': 10}, {'x': 20, 'y': 20}];
+      const image = new Image();
+
+      expect(() => new Rect(rect, image)).to.throw(
+          'Duplicate points : point 1 = ' +
+          'point 0 = (10, 10)');
     });
 
     it('normal rect', () => {
