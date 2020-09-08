@@ -147,6 +147,7 @@ public class GetBlurAreasServlet extends HttpServlet {
     Builder requestBuilder = AnnotateImageRequest.newBuilder();
 
     // Check which parts our bitmask contains and add the corresponding features to requestBuilder.
+    // setMaxResults(0) disables the maximum limit of features to return.
     if ((partsToBlurMask & FACE_BLUR_MASK) != 0) {
       Feature feature =
           Feature.newBuilder().setType(Feature.Type.FACE_DETECTION).setMaxResults(0).build();
