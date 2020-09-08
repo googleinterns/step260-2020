@@ -12,7 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// suppress linter error - getImageWithBlurredAreas function is used from another file
+// suppress linter error -
+// getImageWithBlurredAreas function is used from another file.
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern": "getImageWithBlurredAreas" }] */
 
