@@ -94,7 +94,13 @@ describe('blurring method', function() {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
         const rectsToBlur = testCase.rects;
+
+        // get Image object to pass to getImageWithBlurredAreas
+        // function as parameter
         const inputImage = await getImageFromPath(testCase.inputImageUrl);
+
+        // get Blob to compare with the output of
+        // getImageWithBlurredAreas function
         const expectedImage = await getFileBlob(testCase.expectedImageUrl);
 
         getImageWithBlurredAreas(rectsToBlur, inputImage).toBlob(
