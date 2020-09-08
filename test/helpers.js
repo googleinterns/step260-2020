@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+// suppress linter error - getFileObject and
+// getImageFromPath functions are used from another file.
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern": "getFileObject|getImageFromPath" }] */
 
