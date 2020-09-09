@@ -22,6 +22,14 @@
 document.addEventListener('DOMContentLoaded', () => {
   const CANVAS_WIDTH = 300;
 
+  const SAMPLE_IMAGE_URL = 'images/sample-image.jpeg';
+  const SAMPLE_IMAGE_BLUR_AREAS = [
+    {leftX: 87, topY: 405, height: 52, width: 50},
+    {leftX: 599, topY: 365, height: 73, width: 72},
+    {leftX: 460, topY: 329, height: 77, width: 76},
+    {leftX: 254, topY: 456, height: 48, width: 47},
+  ];
+
   const uploadButton = document.getElementById('upload-image');
   uploadButton.addEventListener('change', handleImageUpload);
 
@@ -36,9 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
   outputCanvas.setAttribute('width', CANVAS_WIDTH);
   imagesContainer.append(outputCanvas);
 
+  // put blur radius input into the image container
+  const rangeInput = createBlurRadiusInput();
+  imagesContainer.append(rangeInput);
+
   // add sample image on page - original and blurred one.
-  putSampleImagesOnPage();
+  processImage(SAMPLE_IMAGE_URL, SAMPLE_IMAGE_BLUR_AREAS);
 });
+
+/**
+ * Function to create scrolling bar for blurRadius.
+ * @return {HTMLInputElement}
+ */
+function createBlurRadiusInput() {
+  const rangeInput = document.createElement('input');
+
+  rangeInput.setAttribute('type', 'range');
+  rangeInput.setAttribute('id', 'blurring-radius');
+  rangeInput.setAttribute('min', 0);
+
+  return rangeInput;
+}
 
 /**
  * Function which is called when user chooses file to upload.
@@ -46,10 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // if image is valid - put it on page (original and blurred one).
-    putImageOnPageAndBlur(event.target.files[0]);
+    // blur the image and update html page.
+    const imageUrl = URL.createObjectURL(event.target.files[0]);
+
+    const blurAreas = await getBlurAreas(event.target.files[0]);
+
+    processImage(imageUrl, blurAreas);
   }).catch((error) => {
-    // if image is not valid - display error message
     alert(error.message);
   });
 }
@@ -67,57 +96,72 @@ function createCanvasForId(id) {
 }
 
 /**
- * Function to blur image and put on page
- * original and blurred images
- * @param {File} imageFile
+ * Updates the page with new uploaded image.
+ * It calls blurring method, puts new and blurred
+ * images on canvases and updates blurRadius input
+ * bar for new image.
+ * @param {String} imageUrl
+ * @param {Array<Rect>} blurAreas
+ * @return {Promise<void>} nothing
  */
-async function putImageOnPageAndBlur(imageFile) {
-  const imageUrl = URL.createObjectURL(imageFile);
+async function processImage(imageUrl, blurAreas) {
+  const imageObj = await getImageFromUrl(imageUrl);
 
-  // create Image object from url to put it on canvas.
-  const imageObj = new Image();
-  imageObj.src = imageUrl;
+  const inputCanvas = document.getElementById('input-canvas');
+  const outputCanvas = document.getElementById('output-canvas');
 
-  // need to wait until image loads to put it anywhere.
-  imageObj.onload = async () => {
-    const inputCanvas = document.getElementById('input-canvas');
-    drawImageOnCanvas(imageObj, inputCanvas);
+  // set blurRadiusInput bar max and default values.
+  const blurRadiusInput = document.getElementById('blurring-radius');
 
-    const blurAreas = await getBlurAreas(imageFile);
+  blurRadiusInput.setAttribute('max', Math.ceil(
+      getAverageRectSize(blurAreas) / (100 * 100) * 12 * 2));
+  blurRadiusInput.setAttribute('value', blurRadiusInput.max / 2);
 
-    const blurredImage = getImageWithBlurredAreas(blurAreas, imageObj);
-
-    const outputCanvas = document.getElementById('output-canvas');
+  // reblur image every time user scrolls the blurRadiusInput bar.
+  blurRadiusInput.addEventListener('change', (event) => {
+    const blurredImage = getImageWithBlurredAreas(
+        blurAreas, imageObj, blurRadiusInput.value);
     drawImageOnCanvas(blurredImage, outputCanvas);
-  };
+  });
+
+  // draw original and blurred images on page.
+  drawImageOnCanvas(imageObj, inputCanvas);
+  const blurredImage = getImageWithBlurredAreas(
+      blurAreas, imageObj, blurRadiusInput.value);
+  drawImageOnCanvas(blurredImage, outputCanvas);
 }
 
 /**
- * Function to draw sample image (blurred and not blurred)
- * on input and output canvases.
+ * Helper function to get average rect size of
+ * rects to blur. Rect size is its width x height.
+ * @param {Array<Rect>} blurAreas
+ * @return {Number} average rect size.
  */
-async function putSampleImagesOnPage() {
-  const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
-  const BLURRED_SAMPLE_IMAGE_URL = 'images/blurred-hadgehog.png';
+function getAverageRectSize(blurAreas) {
+  let sumDimensions = 0;
 
-  /**
-   * @param {string} imageUrl
-   * @param {string} canvasId
-   */
-  const putImageOnCanvas = (imageUrl, canvasId) => {
-    // create Image object from url to put it on canvas.
-    const imageObj = new Image();
-    imageObj.src = imageUrl;
+  for (const rect of blurAreas) {
+    sumDimensions += rect.width * rect.height;
+  }
 
-    // need to wait until image loads to put it anywhere.
-    imageObj.onload = () => {
-      const canvas = document.getElementById(canvasId);
-      drawImageOnCanvas(imageObj, canvas);
+  return sumDimensions / blurAreas.length;
+}
+
+/**
+ * Helper function to get image object from url
+ * pointing to that image.
+ * @param {String} url
+ * @return {Promise<Image>}
+ */
+function getImageFromUrl(url) {
+  return new Promise(function(resolve) {
+    const image = new Image();
+    image.src = url;
+
+    image.onload = function() {
+      resolve(image);
     };
-  };
-
-  putImageOnCanvas(SAMPLE_IMAGE_URL, 'input-canvas');
-  putImageOnCanvas(BLURRED_SAMPLE_IMAGE_URL, 'output-canvas');
+  });
 }
 
 /**
