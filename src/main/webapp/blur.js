@@ -13,9 +13,9 @@
 // limitations under the License.
 
 // suppress linter error -
-// getImageWithBlurredAreas function is used from another file.
+// getImageWithFilledAreas function is used from another file.
 /* eslint no-unused-vars:
-["error", { "varsIgnorePattern": "getImageWithBlurredAreas" }] */
+["error", { "varsIgnorePattern": "getImageWithFilledAreas" }] */
 
 'use strict';
 
@@ -34,14 +34,13 @@ function createCanvasForImage(image) {
 }
 
 /**
- * Function to get image with some areas blurred.
- * For now they are not blurred, but filled with
- * average color of an image.
- * @param {Array<Rect>} rectsToBlur Areas to blur.
+ * Function to get image with some areas filled
+ * with an average color of an image.
+ * @param {Array<Rect>} rectsToFill Areas to fill.
  * @param {Image} image Initial image.
- * @return {HTMLCanvasElement} canvas with image with blurred areas.
+ * @return {HTMLCanvasElement} canvas with image with filled areas.
  */
-function getImageWithBlurredAreas(rectsToBlur, image) {
+function getImageWithFilledAreas(rectsToFill, image) {
   const resultCanvas = createCanvasForImage(image);
   const resultCtx = resultCanvas.getContext('2d');
 
@@ -49,7 +48,7 @@ function getImageWithBlurredAreas(rectsToBlur, image) {
 
   resultCtx.fillStyle = getAverageColor(image);
 
-  for (const rect of rectsToBlur) {
+  for (const rect of rectsToFill) {
     resultCtx.fillRect(rect.leftX, rect.topY, rect.width, rect.height);
   }
 

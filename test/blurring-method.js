@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-describe('blurring method', function() {
+describe('filling method', function() {
   const testCases = [
     {
       'description': 'jpg image',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test1.png',
+      'expectedImageUrl': 'filled/test1.png',
       'rects': [
         {
           'leftX': 0,
@@ -36,7 +36,7 @@ describe('blurring method', function() {
     {
       'description': 'png image',
       'inputImageUrl': 'test-files/537kb.png',
-      'expectedImageUrl': 'blurred/test2.png',
+      'expectedImageUrl': 'filled/test2.png',
       'rects': [
         {
           'leftX': 0,
@@ -55,7 +55,7 @@ describe('blurring method', function() {
     {
       'description': 'intersecting rectangles',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test3.png',
+      'expectedImageUrl': 'filled/test3.png',
       'rects': [
         {
           'leftX': 100,
@@ -74,7 +74,7 @@ describe('blurring method', function() {
     {
       'description': 'one big rectangle',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test4.png',
+      'expectedImageUrl': 'filled/test4.png',
       'rects': [
         {
           'leftX': 0,
@@ -93,20 +93,20 @@ describe('blurring method', function() {
   function makeTest(testCase) {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
-        const rectsToBlur = testCase.rects;
+        const rectsToFill = testCase.rects;
 
-        // get Image object to pass to getImageWithBlurredAreas
+        // get Image object to pass to getImageWithFilledAreas
         // function as parameter
         const inputImage = await getImageFromPath(testCase.inputImageUrl);
 
         // get Blob to compare with the output of
-        // getImageWithBlurredAreas function
+        // getImageWithFilledAreas function
         const expectedImage = await getFileBlob(testCase.expectedImageUrl);
 
-        getImageWithBlurredAreas(rectsToBlur, inputImage).toBlob(
-            async function(blurredImage) {
+        getImageWithFilledAreas(rectsToFill, inputImage).toBlob(
+            async function(filledImage) {
               resemble(expectedImage)
-                  .compareTo(blurredImage)
+                  .compareTo(filledImage)
                   .onComplete(function(data) {
                     // expected and blurred images must be 100% equal.
                     expect((parseInt(data.misMatchPercentage))).to.equal(0);
