@@ -12,7 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-/* eslint no-unused-vars: ["error", { "varsIgnorePattern": "getFileObject" }] */
+// suppress linter error - getFileObject and
+// getImageFromPath functions are used from another file.
+/* eslint no-unused-vars:
+["error", { "varsIgnorePattern": "getFileObject|getImageFromPath" }] */
 
 'use strict';
 
@@ -50,4 +53,21 @@ async function getFileObject(filePathOrUrl) {
   blob.lastModifiedDate = new Date();
 
   return new File([blob], 'my-file');
+}
+
+/**
+ * Helper function to get image object from
+ * image represented by path (e.g. 'images/image.jpg').
+ * @param {string} path
+ * @return {Promise<Image>} image
+ */
+function getImageFromPath(path) {
+  return new Promise(function(resolve) {
+    const image = new Image();
+    image.src = path;
+
+    image.onload = function() {
+      resolve(image);
+    };
+  });
 }
