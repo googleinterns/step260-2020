@@ -13,9 +13,11 @@
 // limitations under the License.
 
 // suppress linter error -
-// getImageWithFilledAreas function is used from another file.
+// getImageWithFilledAreas and getImageWithBlurredAreas
+// functions are used from another file.
 /* eslint no-unused-vars:
-["error", { "varsIgnorePattern": "getImageWithFilledAreas" }] */
+["error", { "varsIgnorePattern":
+"getImageWithFilledAreas|getImageWithBlurredAreas" }] */
 
 'use strict';
 
@@ -70,4 +72,43 @@ function getAverageColor(image) {
   }).join(''));
 
   return rgbToHex(...averageColorRgb);
+}
+
+/**
+ * Function to get image with some areas blurred.
+ * @param {Array<Rect>}rectsToBlur Areas to blur.
+ * @param {Image} image
+ * @param {Number} blurRadius
+ * @return {HTMLCanvasElement}
+ */
+function getImageWithBlurredAreas(rectsToBlur, image, blurRadius) {
+  // Create canvas and put original image on it.
+  const withoutBlurAreasCanvas = createCanvasForImage(image);
+  const withoutBlurAreasCtx = withoutBlurAreasCanvas.getContext('2d');
+
+  withoutBlurAreasCtx.drawImage(image, 0, 0);
+
+  // For smoothing edges of blurred areas.
+  withoutBlurAreasCtx.globalCompositeOperation = 'destination-out';
+  withoutBlurAreasCtx.filter = `blur(${blurRadius / 2}px)`; // smoothing radius
+
+  // Delete areas to blur from this canvas.
+  for (const rect of rectsToBlur) {
+    withoutBlurAreasCtx.fillRect(
+        rect.leftX, rect.topY, rect.width, rect.height);
+  }
+
+  // Create canvas and put blurred image on it.
+  const blurredCanvas = createCanvasForImage(image);
+  const blurredCtx = blurredCanvas.getContext('2d');
+
+  blurredCtx.filter = `blur(${blurRadius}px)`;
+  blurredCtx.drawImage(image, 0, 0);
+
+  // Draw the original image with smoothed holes in place of
+  // areas to blur on top of blurred canvas.
+  blurredCtx.filter = 'none';
+  blurredCtx.drawImage(withoutBlurAreasCanvas, 0, 0);
+
+  return blurredCanvas;
 }
