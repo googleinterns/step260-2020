@@ -21,19 +21,23 @@ import com.google.appengine.api.images.ServingUrlOptions;
 import java.awt.Point;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.Date;
+import java.util.List;
 
 /** Class containing an image and the rectangles detected by the Cloud Vision API. */
 public final class BlurImage {
-  
+
   private final long id;
   private final String userId;
   private final String url;
   private final List<List<Point>> blurRectangles;
   private final Date dateAccessed;
 
-  public BlurImage(long id, String userId, BlobKey blobKey, List<List<Point>> blurRectangles,
+  public BlurImage(
+      long id,
+      String userId,
+      BlobKey blobKey,
+      List<List<Point>> blurRectangles,
       Date dateAccessed) {
     this.id = id;
     this.userId = userId;

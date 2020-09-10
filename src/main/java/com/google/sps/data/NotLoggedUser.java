@@ -14,17 +14,15 @@
 
 package com.google.sps.data;
 
-import com.google.sps.data.User;
-
 /** Class containing a not logged user. */
 public final class NotLoggedUser extends User {
-  
+
   private final String loginURL;
-  
+
   public NotLoggedUser(String loginURL) {
     // Init User super class with loggedIn = false.
     super(false);
-    
+
     this.loginURL = loginURL;
   }
 

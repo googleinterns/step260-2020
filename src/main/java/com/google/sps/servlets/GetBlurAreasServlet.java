@@ -38,7 +38,6 @@ import com.google.cloud.vision.v1.Vertex;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import com.google.sps.data.LoggedUser;
-import com.google.sps.data.NotLoggedUser;
 import com.google.sps.data.User;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
@@ -134,10 +133,10 @@ public class GetBlurAreasServlet extends HttpServlet {
 
       // Total storage space used by the user, including the new uploaded photo.
       long totalSpace = loggedUser.getUsedSpace() + blobInfo.getSize();
-      
+
       // If the total space doesn't exceed the limit, store the photo in database. If it exceeds, we
       // simply ignore it for now.
-      if(totalSpace <= USER_STORAGE_LIMIT) {
+      if (totalSpace <= USER_STORAGE_LIMIT) {
         // Create the imageEntity.
         Entity imageEntity = new Entity("BlurImage");
         imageEntity.setProperty("userId", loggedUser.getId());

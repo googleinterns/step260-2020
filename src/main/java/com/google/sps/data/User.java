@@ -16,14 +16,12 @@ package com.google.sps.data;
 
 import com.google.appengine.api.users.UserService;
 import com.google.appengine.api.users.UserServiceFactory;
-import com.google.sps.data.LoggedUser;
-import com.google.sps.data.NotLoggedUser;
 
 /** Class containing a user. */
 public abstract class User {
-  
+
   private final Boolean loggedIn;
-  
+
   public User(Boolean loggedIn) {
     this.loggedIn = loggedIn;
   }
@@ -41,7 +39,7 @@ public abstract class User {
       String userId = userService.getCurrentUser().getUserId();
       String urlToRedirectToAfterUserLogsOut = "/";
       String logoutURL = userService.createLogoutURL(urlToRedirectToAfterUserLogsOut);
-      
+
       // Init user as a LoggedUser.
       user = new LoggedUser(userId, logoutURL);
     } else {

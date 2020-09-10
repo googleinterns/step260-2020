@@ -19,19 +19,18 @@ import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
-import com.google.sps.data.User;
 
 /** Class containing a logged user. */
 public final class LoggedUser extends User {
-  
+
   private final String id;
   private Long usedSpace;
   private final String logoutURL;
-  
+
   public LoggedUser(String id, String logoutURL) {
     // Init User super class with loggedIn = true.
     super(true);
-    
+
     this.id = id;
     this.usedSpace = usedSpace;
     this.logoutURL = logoutURL;
@@ -41,7 +40,7 @@ public final class LoggedUser extends User {
   }
 
   public String getId() {
-      return id;
+    return id;
   }
 
   public Long getUsedSpace() {
@@ -71,7 +70,7 @@ public final class LoggedUser extends User {
     Entity userEntity = results.asSingleEntity();
 
     // If the user is not in database yet, add them.
-    if(userEntity == null) {
+    if (userEntity == null) {
       userEntity = new Entity("User");
       userEntity.setProperty("id", id);
       userEntity.setProperty("usedSpace", 0l);

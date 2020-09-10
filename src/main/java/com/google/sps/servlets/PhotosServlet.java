@@ -43,7 +43,7 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/photos")
 public class PhotosServlet extends HttpServlet {
 
-  /** 
+  /**
    * Method that handles the GET requests to "/photos" path. Parameter "max-photos" specifies the
    * maximum number of photos to return. Returns a JSON array of BlurImages ordered by dateAccessed
    * descending.
@@ -70,8 +70,8 @@ public class PhotosServlet extends HttpServlet {
     }
 
     // Make sure maxPhotos is not negative.
-    if(maxPhotos < 0) {
-        maxPhotos = 0;
+    if (maxPhotos < 0) {
+      maxPhotos = 0;
     }
 
     // Load current user's photos from datastore.
@@ -108,7 +108,8 @@ public class PhotosServlet extends HttpServlet {
    * a photo from the database.
    */
   @Override
-  public void doDelete(HttpServletRequest request, HttpServletResponse response) throws IOException {
+  public void doDelete(HttpServletRequest request, HttpServletResponse response)
+      throws IOException {
     // If the user is not logged in, send an error message.
     User user = User.getCurrentUser();
     if (!user.isLoggedIn()) {
@@ -144,7 +145,7 @@ public class PhotosServlet extends HttpServlet {
     Entity photoEntity = results.asSingleEntity();
 
     // If the entity does not exist, respond with an error.
-    if(photoEntity == null) {
+    if (photoEntity == null) {
       response.setContentType("text/html;");
       response.getWriter().println("The current user has no photo with id: " + idString);
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
