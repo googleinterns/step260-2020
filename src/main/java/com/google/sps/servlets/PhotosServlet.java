@@ -30,11 +30,9 @@ import com.google.gson.Gson;
 import com.google.sps.data.BlurImage;
 import com.google.sps.data.LoggedUser;
 import com.google.sps.data.User;
-import java.awt.Point;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -87,10 +85,10 @@ public class PhotosServlet extends HttpServlet {
     for (Entity entity : results.asIterable(FetchOptions.Builder.withLimit(maxPhotos))) {
       long id = entity.getKey().getId();
       BlobKey blobKey = (BlobKey) entity.getProperty("blobKey");
-      List<List<Point>> blurRectangles = (List<List<Point>>) entity.getProperty("blurRectangles");
+      String jsonBlurRectangles = (String) entity.getProperty("jsonBlurRectangles");
       Date dateAccessed = (Date) entity.getProperty("dateAccessed");
 
-      photos.add(new BlurImage(id, userId, blobKey, blurRectangles, dateAccessed));
+      photos.add(new BlurImage(id, userId, blobKey, jsonBlurRectangles, dateAccessed));
     }
 
     // Convert the photos array to JSON.

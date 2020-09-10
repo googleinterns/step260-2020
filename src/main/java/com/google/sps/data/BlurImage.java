@@ -18,11 +18,9 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.images.ImagesService;
 import com.google.appengine.api.images.ImagesServiceFactory;
 import com.google.appengine.api.images.ServingUrlOptions;
-import java.awt.Point;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Date;
-import java.util.List;
 
 /** Class containing an image and the rectangles detected by the Cloud Vision API. */
 public final class BlurImage {
@@ -30,19 +28,15 @@ public final class BlurImage {
   private final long id;
   private final String userId;
   private final String url;
-  private final List<List<Point>> blurRectangles;
+  private final String jsonBlurRectangles;
   private final Date dateAccessed;
 
   public BlurImage(
-      long id,
-      String userId,
-      BlobKey blobKey,
-      List<List<Point>> blurRectangles,
-      Date dateAccessed) {
+      long id, String userId, BlobKey blobKey, String jsonBlurRectangles, Date dateAccessed) {
     this.id = id;
     this.userId = userId;
     this.url = getFileUrl(blobKey);
-    this.blurRectangles = blurRectangles;
+    this.jsonBlurRectangles = jsonBlurRectangles;
     this.dateAccessed = dateAccessed;
   }
 
@@ -74,8 +68,8 @@ public final class BlurImage {
     return url;
   }
 
-  public List<List<Point>> getBlurRectangles() {
-    return blurRectangles;
+  public String getJsonBlurRectangles() {
+    return jsonBlurRectangles;
   }
 
   public Date getDateAccessed() {

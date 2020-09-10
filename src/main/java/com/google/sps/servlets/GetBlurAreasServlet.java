@@ -102,6 +102,9 @@ public class GetBlurAreasServlet extends HttpServlet {
       return;
     }
 
+    // We need this to convert Java objects to JSON strings.
+    Gson gson = new Gson();
+
     // Get the image the user uploaded as bytes.
     byte[] imageBytes = getBlobBytes(blobKey);
 
@@ -141,7 +144,7 @@ public class GetBlurAreasServlet extends HttpServlet {
         Entity imageEntity = new Entity("BlurImage");
         imageEntity.setProperty("userId", loggedUser.getId());
         imageEntity.setProperty("blobKey", blobKey);
-        imageEntity.setProperty("blurRectangles", blurAreas);
+        imageEntity.setProperty("jsonBlurRectangles", gson.toJson(blurAreas));
         // new Date() returns the current date object.
         imageEntity.setProperty("dateAccessed", new Date());
 
@@ -158,7 +161,6 @@ public class GetBlurAreasServlet extends HttpServlet {
     }
 
     // Convert the rectangles to JSON.
-    Gson gson = new Gson();
     String jsonResponse = gson.toJson(blurAreas);
 
     // Send the JSON back as the response.
