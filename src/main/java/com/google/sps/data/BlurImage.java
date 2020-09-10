@@ -15,11 +15,6 @@
 package com.google.sps.data;
 
 import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.images.ImagesService;
-import com.google.appengine.api.images.ImagesServiceFactory;
-import com.google.appengine.api.images.ServingUrlOptions;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.Date;
 
 /** Class containing an image and the rectangles detected by the Cloud Vision API. */
@@ -27,7 +22,7 @@ public final class BlurImage {
 
   private final long id;
   private final String userId;
-  private final String url;
+  private final String blobKeyString;
   private final String jsonBlurRectangles;
   private final Date dateAccessed;
 
@@ -35,25 +30,9 @@ public final class BlurImage {
       long id, String userId, BlobKey blobKey, String jsonBlurRectangles, Date dateAccessed) {
     this.id = id;
     this.userId = userId;
-    this.url = getFileUrl(blobKey);
+    this.blobKeyString = blobKey.getKeyString();
     this.jsonBlurRectangles = jsonBlurRectangles;
     this.dateAccessed = dateAccessed;
-  }
-
-  /** Returns a URL that points to the blobstore file at the blobKey location. */
-  private String getFileUrl(BlobKey blobKey) {
-    // Use ImagesService to get a URL that points to the uploaded file.
-    ImagesService imagesService = ImagesServiceFactory.getImagesService();
-    ServingUrlOptions options = ServingUrlOptions.Builder.withBlobKey(blobKey);
-
-    // To support running in Google Cloud Shell with AppEngine's devserver, we must use the relative
-    // path to the image, rather than the path returned by imagesService which contains a host.
-    try {
-      URL url = new URL(imagesService.getServingUrl(options));
-      return url.getPath();
-    } catch (MalformedURLException e) {
-      return imagesService.getServingUrl(options);
-    }
   }
 
   public long getId() {
@@ -64,8 +43,8 @@ public final class BlurImage {
     return userId;
   }
 
-  public String getUrl() {
-    return url;
+  public String getBlobKey() {
+    return blobKeyString;
   }
 
   public String getJsonBlurRectangles() {
