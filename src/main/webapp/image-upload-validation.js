@@ -34,7 +34,8 @@ async function validateImageUpload() {
   // and converted to Mb.
   const MAX_SIZES = {
     'png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 / 1024 / 1024),
-    'jpg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 / 8 / 1024 / 1024),
+    'jpg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
+        8 / 1024 / 1024),
   };
 
   // get FileList with all the files from input element.
