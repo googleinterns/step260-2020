@@ -34,7 +34,7 @@ async function validateImageUpload() {
   // and converted to Mb.
   const MAX_SIZES = {
     'png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 / 1024 / 1024),
-    'jpg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
+    'jpeg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
         8 / 1024 / 1024),
   };
 
@@ -61,22 +61,16 @@ async function validateImageUpload() {
 
 /**
  * Function to make sure the image is not too big.
+ * Assume the image type is already validated.
  * @param {File} image
  * @param {string} imageType Can be 'png' or 'jpeg' only.
  * @param {Object} maxSizes Object with limits for image sizes in Mb.
  */
 function validateImageSize(image, imageType, maxSizes) {
-  if (imageType === 'png' && image.size > maxSizes['png'] * 1024 * 1024) {
+  if (image.size > maxSizes[imageType] * 1024 * 1024) {
     throw new Error(
-        `File size should not exceed ${maxSizes['png']}MB for png images.` +
-        'The size of an uploaded png image is ' +
-        Math.ceil(image.size / 1024 / 1024) + 'MB');
-  }
-
-  if (imageType === 'jpeg' && image.size > maxSizes['jpg'] * 1024 * 1024) {
-    throw new Error(
-        `File size should not exceed ${maxSizes['jpg']}MB for jpeg images.` +
-        'The size of an uploaded jpeg image is ' +
+        `File size should not exceed ${maxSizes[imageType]}MB for ${imageType} ` +
+        `images.The size of an uploaded ${imageType} image is ` +
         Math.ceil(image.size / 1024 / 1024) + 'MB');
   }
 }
