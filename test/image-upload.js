@@ -31,7 +31,7 @@ describe('image upload validation', function() {
       const jpegImage = await getFileObject('test-files/90kb.jpeg');
 
       await getImageTypeOrError(jpegImage).then((extension) => {
-        expect(extension).to.equal('jpeg');
+        expect(extension).to.equal('image/jpeg');
       });
     });
 
@@ -39,7 +39,7 @@ describe('image upload validation', function() {
       const pngImage = await getFileObject('test-files/537kb.png');
 
       await getImageTypeOrError(pngImage).then((extension) => {
-        expect(extension).to.equal('png');
+        expect(extension).to.equal('image/png');
       });
     });
 
@@ -111,8 +111,8 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'File size should not exceed 8MB for png images.' +
-            'The size of an uploaded png image is ' +
+            'File size should not exceed 8MB for image/png images.' +
+            'The size of an uploaded image/png image is ' +
             Math.ceil(pngImage.size / 1024 / 1024) + 'MB');
       });
     });
@@ -125,8 +125,8 @@ describe('image upload validation', function() {
         expect(() => {
           throw error;
         }).to.throw(
-            'File size should not exceed 2MB for jpeg images.' +
-            'The size of an uploaded jpeg image is ' +
+            'File size should not exceed 2MB for image/jpeg images.' +
+            'The size of an uploaded image/jpeg image is ' +
             Math.ceil(jpgImage.size / 1024 / 1024) + 'MB');
       });
     });
