@@ -76,6 +76,15 @@ function getAverageColor(image) {
 
 /**
  * Function to get image with some areas blurred.
+ * We use two canvases for this. On one canvas
+ * we put blurred image. On another canvas
+ * we out not-blurred image and then delete
+ * from it all the areas that we want to blur.
+ * While deleting the areas, we erase not just sharp rectangles,
+ * but blurred rectangles, which will look like smooth edges
+ * of deleted rectangles.
+ * Then we put the canvas with erased areas on top of
+ * the blurred canvas and return that.
  * @param {Array<Rect>}rectsToBlur Areas to blur.
  * @param {Image} image
  * @param {Number} blurRadius

@@ -25,6 +25,18 @@
  * @throws {Error} validation errors
  */
 async function validateImageUpload() {
+  // max width and height in px.
+  const MAX_IMAGE_WIDTH = 1920;
+  const MAX_IMAGE_HEIGHT = 1080;
+
+  // size limits for each supported type in Mb.
+  // calculated as MAX_IMAGE_RESOLUTION * AVERAGE_SIZE_OF_IMAGE_OF_THIS_TYPE
+  // and converted to Mb.
+  const MAX_SIZES = {
+    'png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 / 1024 / 1024),
+    'jpg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 / 8 / 1024 / 1024),
+  };
+
   // get FileList with all the files from input element.
   const files = document.getElementById('upload-image').files;
 
@@ -40,36 +52,29 @@ async function validateImageUpload() {
   const fileType = await getImageTypeOrError(file);
 
   // check file size.
-  validateImageSize(file, fileType);
+  validateImageSize(file, fileType, MAX_SIZES);
 
-  // Image resolution can not be more than 1920x1080.
-  await validateImageResolution(file, 1920, 1080);
+  // Image resolution can not be more than MAX_IMAGE_WIDTH x MAX_IMAGE_HEIGHT.
+  await validateImageResolution(file, MAX_IMAGE_WIDTH, MAX_IMAGE_HEIGHT);
 }
 
 /**
  * Function to make sure the image is not too big.
  * @param {File} image
  * @param {string} imageType Can be 'png' or 'jpeg' only.
+ * @param {Object} maxSizes Object with limits for image sizes in Mb.
  */
-function validateImageSize(image, imageType) {
-  // This limit comes from simple calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BYTES_PER_PIXEL_IN_PNG
-  // 1920 x 1080 x 4 ~ 8294400 bytes ~ 8 mb
-  const PNG_LIMIT_MB = 8;
-  if (imageType === 'png' && image.size > PNG_LIMIT_MB * 1024 * 1024) {
+function validateImageSize(image, imageType, maxSizes) {
+  if (imageType === 'png' && image.size > maxSizes['png'] * 1024 * 1024) {
     throw new Error(
-        `File size should not exceed ${PNG_LIMIT_MB}MB for png images.` +
+        `File size should not exceed ${maxSizes['png']}MB for png images.` +
         'The size of an uploaded png image is ' +
         Math.ceil(image.size / 1024 / 1024) + 'MB');
   }
 
-  // This limit comes from similar calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BITS_PER_PIXEL_IN_JPG
-  // 1920 x 1080 x 8.25 ~ 17107200 bits ~ 2 mb
-  const JPG_LIMIT_MB = 2;
-  if (imageType === 'jpeg' && image.size > JPG_LIMIT_MB * 1024 * 1024) {
+  if (imageType === 'jpeg' && image.size > maxSizes['jpg'] * 1024 * 1024) {
     throw new Error(
-        `File size should not exceed ${JPG_LIMIT_MB}MB for jpeg images.` +
+        `File size should not exceed ${maxSizes['jpg']}MB for jpeg images.` +
         'The size of an uploaded jpeg image is ' +
         Math.ceil(image.size / 1024 / 1024) + 'MB');
   }

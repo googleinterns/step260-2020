@@ -79,7 +79,7 @@ async function handleImageUpload(event) {
 
     processImage(imageUrl, blurAreas);
   }).catch((error) => {
-    alert(error.message);
+    alert('ERROR: ' + error.message);
   });
 }
 
@@ -110,19 +110,9 @@ async function processImage(imageUrl, blurAreas) {
   const inputCanvas = document.getElementById('input-canvas');
   const outputCanvas = document.getElementById('output-canvas');
 
-  // set blurRadiusInput bar max and default values.
+  updateBlurRadiusInputBar(blurAreas, imageObj);
+
   const blurRadiusInput = document.getElementById('blurring-radius');
-
-  blurRadiusInput.setAttribute('max', Math.ceil(
-      getAverageRectSize(blurAreas) / (100 * 100) * 12 * 2));
-  blurRadiusInput.setAttribute('value', blurRadiusInput.max / 2);
-
-  // reblur image every time user scrolls the blurRadiusInput bar.
-  blurRadiusInput.addEventListener('change', (event) => {
-    const blurredImage = getImageWithBlurredAreas(
-        blurAreas, imageObj, blurRadiusInput.value);
-    drawImageOnCanvas(blurredImage, outputCanvas);
-  });
 
   // draw original and blurred images on page.
   drawImageOnCanvas(imageObj, inputCanvas);
@@ -132,19 +122,55 @@ async function processImage(imageUrl, blurAreas) {
 }
 
 /**
- * Helper function to get average rect size of
- * rects to blur. Rect size is its width x height.
+ * Function to update blur radius input bar for new image.
+ * Sets max and default values to the bar, adds event
+ * listener to reblur the image when the bar is scrolled.
+ * We get the formula for default value from experiments and
+ * set max value to defaultValue * 2.
+ * We decided that the best blurRadius value
+ * depends mostly on the size of the area that we want to blur,
+ * which is why we have some sample area and adjust the best
+ * blur radius for it (which we get by experiments) to our
+ * image's blurAreas sizes.
  * @param {Array<Rect>} blurAreas
+ * @param {Image} imageObj
+ */
+function updateBlurRadiusInputBar(blurAreas, imageObj) {
+  const SAMPLE_AREA_SIZE = 100 * 100;
+  const SAMPLE_BEST_BLUR_RADIUS = 12;
+
+  const DEFAULT_VALUE = Math.ceil(getAverageRectsArea(blurAreas) /
+      SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
+
+  const blurRadiusInput = document.getElementById('blurring-radius');
+
+  blurRadiusInput.max = DEFAULT_VALUE * 2;
+  blurRadiusInput.value = DEFAULT_VALUE;
+
+  const outputCanvas = document.getElementById('output-canvas');
+
+  // reblur image every time user scrolls the blurRadiusInput bar.
+  blurRadiusInput.onchange = (event) => {
+    const blurredImage = getImageWithBlurredAreas(
+        blurAreas, imageObj, event.target.value);
+    drawImageOnCanvas(blurredImage, outputCanvas);
+  };
+}
+
+/**
+ * Helper function to get average rect size of
+ * rects to blur.
+ * @param {Array<Rect>} rects
  * @return {Number} average rect size.
  */
-function getAverageRectSize(blurAreas) {
-  let sumDimensions = 0;
+function getAverageRectsArea(rects) {
+  let totalArea = 0;
 
-  for (const rect of blurAreas) {
-    sumDimensions += rect.width * rect.height;
+  for (const rect of rects) {
+    totalArea += rect.width * rect.height;
   }
 
-  return sumDimensions / blurAreas.length;
+  return totalArea / rects.length;
 }
 
 /**
