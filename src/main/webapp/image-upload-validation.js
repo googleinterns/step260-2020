@@ -69,8 +69,8 @@ async function validateImageUpload() {
 function validateImageSize(image, imageType, maxSizes) {
   if (image.size > maxSizes[imageType] * 1024 * 1024) {
     throw new Error(
-        `File size should not exceed ${maxSizes[imageType]}MB for ${imageType} ` +
-        `images.The size of an uploaded ${imageType} image is ` +
+        `File size should not exceed ${maxSizes[imageType]}MB for ` +
+        `${imageType} images.The size of an uploaded ${imageType} image is ` +
         Math.ceil(image.size / 1024 / 1024) + 'MB');
   }
 }
