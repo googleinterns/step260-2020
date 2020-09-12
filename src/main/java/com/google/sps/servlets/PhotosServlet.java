@@ -23,8 +23,14 @@ import com.google.appengine.api.datastore.DatastoreService;
 import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.FetchOptions;
+import com.google.appengine.api.datastore.KeyFactory;
 import com.google.appengine.api.datastore.PreparedQuery;
 import com.google.appengine.api.datastore.Query;
+import com.google.appengine.api.datastore.Query.CompositeFilter;
+import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
+import com.google.appengine.api.datastore.Query.Filter;
+import com.google.appengine.api.datastore.Query.FilterOperator;
+import com.google.appengine.api.datastore.Query.FilterPredicate;
 import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.sps.data.BlurImage;
@@ -135,9 +141,18 @@ public class PhotosServlet extends HttpServlet {
     // Get the photo entity from database.
     String userId = loggedUser.getId();
     Query query = new Query("BlurImage");
-    query.setFilter(new Query.FilterPredicate("id", Query.FilterOperator.EQUAL, id));
-    // Make sure the photo belongs to the user logged in.
-    query.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
+    Filter idFilter =
+        new FilterPredicate(
+            Entity.KEY_RESERVED_PROPERTY,
+            FilterOperator.EQUAL,
+            KeyFactory.createKey("BlurImage", id));
+    // We also check the photo's userId to match to the user making the request to avoid deleting
+    // other users' photos.
+    Filter userIdFilter = new FilterPredicate("userId", FilterOperator.EQUAL, userId);
+    // Combine the two filters into one.
+    CompositeFilter combinedFilter = CompositeFilterOperator.and(idFilter, userIdFilter);
+    // Apply the filter to the query.
+    query.setFilter(combinedFilter);
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
     Entity photoEntity = results.asSingleEntity();
