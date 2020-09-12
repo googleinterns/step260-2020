@@ -32,7 +32,6 @@ public final class LoggedUser extends User {
     super(true);
 
     this.id = id;
-    this.usedSpace = usedSpace;
     this.logoutURL = logoutURL;
 
     // Get user's usedSpace from the database.

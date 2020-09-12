@@ -24,15 +24,15 @@ public final class BlurImage {
   private final String userId;
   private final String blobKeyString;
   private final String jsonBlurRectangles;
-  private final Date dateAccessed;
+  private final Date dateCreated;
 
   public BlurImage(
-      long id, String userId, BlobKey blobKey, String jsonBlurRectangles, Date dateAccessed) {
+      long id, String userId, BlobKey blobKey, String jsonBlurRectangles, Date dateCreated) {
     this.id = id;
     this.userId = userId;
     this.blobKeyString = blobKey.getKeyString();
     this.jsonBlurRectangles = jsonBlurRectangles;
-    this.dateAccessed = dateAccessed;
+    this.dateCreated = dateCreated;
   }
 
   public long getId() {
@@ -51,7 +51,7 @@ public final class BlurImage {
     return jsonBlurRectangles;
   }
 
-  public Date getDateAccessed() {
-    return dateAccessed;
+  public Date dateCreated() {
+    return dateCreated;
   }
 }

@@ -43,7 +43,7 @@ public class PhotosServlet extends HttpServlet {
 
   /**
    * Method that handles the GET requests to "/photos" path. Parameter "max-photos" specifies the
-   * maximum number of photos to return. Returns a JSON array of BlurImages ordered by dateAccessed
+   * maximum number of photos to return. Returns a JSON array of BlurImages ordered by dateCreated
    * descending.
    */
   @Override
@@ -76,7 +76,7 @@ public class PhotosServlet extends HttpServlet {
     String userId = loggedUser.getId();
     Query query = new Query("BlurImage");
     query.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
-    query.addSort("dateAccessed", SortDirection.DESCENDING);
+    query.addSort("dateCreated", SortDirection.DESCENDING);
     DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
     PreparedQuery results = datastore.prepare(query);
 
@@ -86,9 +86,9 @@ public class PhotosServlet extends HttpServlet {
       long id = entity.getKey().getId();
       BlobKey blobKey = (BlobKey) entity.getProperty("blobKey");
       String jsonBlurRectangles = (String) entity.getProperty("jsonBlurRectangles");
-      Date dateAccessed = (Date) entity.getProperty("dateAccessed");
+      Date dateCreated = (Date) entity.getProperty("dateCreated");
 
-      photos.add(new BlurImage(id, userId, blobKey, jsonBlurRectangles, dateAccessed));
+      photos.add(new BlurImage(id, userId, blobKey, jsonBlurRectangles, dateCreated));
     }
 
     // Convert the photos array to JSON.

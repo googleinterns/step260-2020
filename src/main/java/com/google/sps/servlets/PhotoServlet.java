@@ -28,7 +28,8 @@ public class PhotoServlet extends HttpServlet {
 
   /**
    * Method that handles the GET requests to "/photo" path. Parameter "blob-key" specifies the
-   * blobKey of the photo requested.
+   * blobKey of the photo requested. Responds with the photo at the blobstore location pointed by
+   * "blob-key".
    */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

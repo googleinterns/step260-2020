@@ -146,7 +146,7 @@ public class GetBlurAreasServlet extends HttpServlet {
         imageEntity.setProperty("blobKey", blobKey);
         imageEntity.setProperty("jsonBlurRectangles", gson.toJson(blurAreas));
         // new Date() returns the current date object.
-        imageEntity.setProperty("dateAccessed", new Date());
+        imageEntity.setProperty("dateCreated", new Date());
 
         // Save imageEntity in datastore.
         DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
