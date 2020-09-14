@@ -37,15 +37,14 @@ public abstract class User {
     if (userService.isUserLoggedIn()) {
       // Load user variables.
       String userId = userService.getCurrentUser().getUserId();
-      String urlToRedirectToAfterUserLogsOut = "/";
-      String logoutURL = userService.createLogoutURL(urlToRedirectToAfterUserLogsOut);
+      // Parameter specifies the url to redirect after logout.
+      String logoutURL = userService.createLogoutURL("/");
 
       // Init user as a LoggedUser.
       user = new LoggedUser(userId, logoutURL);
     } else {
-      // Load user variables.
-      String urlToRedirectToAfterUserLogsIn = "/";
-      String loginURL = userService.createLoginURL(urlToRedirectToAfterUserLogsIn);
+      // Parameter specifies the url to redirect after logout.
+      String loginURL = userService.createLoginURL("/");
 
       // Init user as a NotLoggedUser.
       user = new NotLoggedUser(loginURL);

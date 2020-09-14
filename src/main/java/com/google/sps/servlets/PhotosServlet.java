@@ -14,24 +14,8 @@
 
 package com.google.sps.servlets;
 
-import com.google.appengine.api.blobstore.BlobInfo;
-import com.google.appengine.api.blobstore.BlobInfoFactory;
 import com.google.appengine.api.blobstore.BlobKey;
-import com.google.appengine.api.blobstore.BlobstoreService;
-import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
-import com.google.appengine.api.datastore.DatastoreService;
-import com.google.appengine.api.datastore.DatastoreServiceFactory;
 import com.google.appengine.api.datastore.Entity;
-import com.google.appengine.api.datastore.FetchOptions;
-import com.google.appengine.api.datastore.KeyFactory;
-import com.google.appengine.api.datastore.PreparedQuery;
-import com.google.appengine.api.datastore.Query;
-import com.google.appengine.api.datastore.Query.CompositeFilter;
-import com.google.appengine.api.datastore.Query.CompositeFilterOperator;
-import com.google.appengine.api.datastore.Query.Filter;
-import com.google.appengine.api.datastore.Query.FilterOperator;
-import com.google.appengine.api.datastore.Query.FilterPredicate;
-import com.google.appengine.api.datastore.Query.SortDirection;
 import com.google.gson.Gson;
 import com.google.sps.data.BlurImage;
 import com.google.sps.data.LoggedUser;
@@ -73,22 +57,13 @@ public class PhotosServlet extends HttpServlet {
       maxPhotos = Integer.MAX_VALUE;
     }
 
-    // Make sure maxPhotos is not negative.
-    if (maxPhotos < 0) {
-      maxPhotos = 0;
-    }
-
-    // Load current user's photos from datastore.
-    String userId = loggedUser.getId();
-    Query query = new Query("BlurImage");
-    query.setFilter(new Query.FilterPredicate("userId", Query.FilterOperator.EQUAL, userId));
-    query.addSort("dateCreated", SortDirection.DESCENDING);
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    PreparedQuery results = datastore.prepare(query);
+    // Load current user's photos from datastore ordered by date created.
+    Iterable<Entity> photoEntities = loggedUser.getBlurImageEntities(maxPhotos);
 
     // Store photos in an array.
     ArrayList<BlurImage> photos = new ArrayList<>();
-    for (Entity entity : results.asIterable(FetchOptions.Builder.withLimit(maxPhotos))) {
+    for (Entity entity : photoEntities) {
+      String userId = loggedUser.getId();
       long id = entity.getKey().getId();
       BlobKey blobKey = (BlobKey) entity.getProperty("blobKey");
       String jsonBlurRectangles = (String) entity.getProperty("jsonBlurRectangles");
@@ -138,44 +113,12 @@ public class PhotosServlet extends HttpServlet {
       return;
     }
 
-    // Get the photo entity from database.
-    String userId = loggedUser.getId();
-    Query query = new Query("BlurImage");
-    Filter idFilter =
-        new FilterPredicate(
-            Entity.KEY_RESERVED_PROPERTY,
-            FilterOperator.EQUAL,
-            KeyFactory.createKey("BlurImage", id));
-    // We also check the photo's userId to match to the user making the request to avoid deleting
-    // other users' photos.
-    Filter userIdFilter = new FilterPredicate("userId", FilterOperator.EQUAL, userId);
-    // Combine the two filters into one.
-    CompositeFilter combinedFilter = CompositeFilterOperator.and(idFilter, userIdFilter);
-    // Apply the filter to the query.
-    query.setFilter(combinedFilter);
-    DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
-    PreparedQuery results = datastore.prepare(query);
-    Entity photoEntity = results.asSingleEntity();
-
-    // If the entity does not exist, respond with an error.
-    if (photoEntity == null) {
+    // Delete the photo.
+    if (!loggedUser.deletePhoto(id)) {
+      // If the user doesn't have a photo with id, show a message.
       response.setContentType("text/html;");
       response.getWriter().println("The current user has no photo with id: " + idString);
       response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-      return;
     }
-
-    // Decrease user's usedSpace.
-    BlobKey blobKey = (BlobKey) photoEntity.getProperty("blobKey");
-    BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
-    long totalSpace = loggedUser.getUsedSpace() - blobInfo.getSize();
-    loggedUser.setUsedSpace(totalSpace);
-
-    // Delete image from blobstore.
-    BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
-    blobstoreService.delete(blobKey);
-
-    // Delete image from database.
-    datastore.delete(photoEntity.getKey());
   }
 }
