@@ -117,12 +117,13 @@ describe('blurring method', function() {
   function makeTest(testCase) {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
-        const rectsToBlur = testCase.rects;
-        const inputImage = await getImageFromPath(testCase.inputImageUrl);
+        const inputImage = new ImageObject(testCase.inputImageUrl,
+            await getImageFromPath(testCase.inputImageUrl), 'somename',
+            'sometype', testCase.rects);
         const expectedImage = await getFileBlob(testCase.expectedImageUrl);
         const blurRadius = testCase.blurRadius;
 
-        getImageWithBlurredAreas(rectsToBlur, inputImage, blurRadius).toBlob(
+        getImageWithBlurredAreas(inputImage, blurRadius).object.toBlob(
             async function(blurredImage) {
               resemble(expectedImage)
                   .compareTo(blurredImage)
