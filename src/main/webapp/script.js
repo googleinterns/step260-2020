@@ -136,12 +136,7 @@ async function processImage(imageUrl, blurAreas) {
  * @param {Image} imageObj
  */
 function updateBlurRadiusInputBar(blurAreas, imageObj) {
-  const SAMPLE_AREA_SIZE = 100 * 100;
-  const SAMPLE_BEST_BLUR_RADIUS = 12;
-
-  const DEFAULT_VALUE = Math.ceil(getAverageRectsArea(blurAreas) /
-      SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
-
+  const DEFAULT_VALUE = getDefaultBlurRadius(blurAreas);
   const blurRadiusInput = document.getElementById('blurring-radius');
 
   blurRadiusInput.max = DEFAULT_VALUE * 2;
@@ -155,57 +150,4 @@ function updateBlurRadiusInputBar(blurAreas, imageObj) {
         blurAreas, imageObj, event.target.value);
     drawImageOnCanvas(blurredImage, outputCanvas);
   };
-}
-
-/**
- * Helper function to get average rect size of
- * rects to blur.
- * @param {Array<Rect>} rects
- * @return {Number} average rect size.
- */
-function getAverageRectsArea(rects) {
-  let totalArea = 0;
-
-  for (const rect of rects) {
-    totalArea += rect.width * rect.height;
-  }
-
-  return totalArea / rects.length;
-}
-
-/**
- * Helper function to get image object from url
- * pointing to that image.
- * @param {String} url
- * @return {Promise<Image>}
- */
-function getImageFromUrl(url) {
-  return new Promise(function(resolve) {
-    const image = new Image();
-    image.src = url;
-
-    image.onload = function() {
-      resolve(image);
-    };
-  });
-}
-
-/**
- * Function to draw image on canvas.
- * Width of canvas should be constant, height adjusts for
- * the image proportions.
- * @param {Image} image
- * @param {HTMLCanvasElement} canvas
- */
-function drawImageOnCanvas(image, canvas) {
-  const ctx = canvas.getContext('2d');
-
-  // clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // resize canvas height to fit new image
-  canvas.height = image.height * canvas.width / image.width;
-
-  // draw new image on it, scaling the image to fit in canvas
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 }
