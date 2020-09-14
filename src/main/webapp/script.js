@@ -17,11 +17,9 @@
 /**
  * Function which is called when page loads.
  * Add event listener to image upload button.
- * Add canvases to the page, put sample image to them.
+ * Put sample image on canvases on page.
  */
 document.addEventListener('DOMContentLoaded', () => {
-  const CANVAS_WIDTH = 300;
-
   const SAMPLE_IMAGE_URL = 'images/sample-image.jpeg';
   const SAMPLE_IMAGE_NAME = 'sample-image.jpeg';
   const SAMPLE_IMAGE_TYPE = 'image/jpeg';
@@ -35,56 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
   const uploadButton = document.getElementById('upload-image');
   uploadButton.addEventListener('change', handleImageUpload);
 
-  const imagesContainer = document.getElementById('images-container');
-
-  // put canvases into image container on html page.
-  const inputCanvas = createCanvasForId('input-canvas');
-  inputCanvas.setAttribute('width', CANVAS_WIDTH);
-  imagesContainer.append(inputCanvas);
-
-  const outputCanvas = createCanvasForId('output-canvas');
-  outputCanvas.setAttribute('width', CANVAS_WIDTH);
-  imagesContainer.append(outputCanvas);
-
-  // put blur radius input into the image container
-  const rangeInput = createBlurRadiusInput();
-  imagesContainer.append(rangeInput);
-
-  // put download button into the image container
-  const downloadButton = createDownloadButton();
-  imagesContainer.append(downloadButton);
-
   // add sample image on page - original and blurred one.
   processImage(SAMPLE_IMAGE_URL, SAMPLE_IMAGE_BLUR_AREAS,
       SAMPLE_IMAGE_TYPE, SAMPLE_IMAGE_NAME);
 });
-
-/**
- * Function to create scrolling bar for blurRadius.
- * @return {HTMLInputElement}
- */
-function createBlurRadiusInput() {
-  const rangeInput = document.createElement('input');
-
-  rangeInput.setAttribute('type', 'range');
-  rangeInput.setAttribute('id', 'blurring-radius');
-  rangeInput.setAttribute('min', 0);
-
-  return rangeInput;
-}
-
-/**
- * Function to create a button to download
- * blurred image.
- * @return {HTMLAnchorElement}
- */
-function createDownloadButton() {
-  const downloadButton = document.createElement('a');
-  downloadButton.setAttribute('id', 'download-button');
-  downloadButton.innerHTML = 'Download';
-
-  return downloadButton;
-}
 
 /**
  * Function which is called when user chooses file to upload.
@@ -105,18 +57,6 @@ async function handleImageUpload(event) {
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });
-}
-
-/**
- * Creates canvas with specified id.
- * @param {string} id
- * @return {HTMLCanvasElement} canvas DOM element
- */
-function createCanvasForId(id) {
-  const canvas = document.createElement('canvas');
-  canvas.setAttribute('id', id);
-
-  return canvas;
 }
 
 /**
@@ -259,8 +199,9 @@ function drawImageOnCanvas(image, canvas) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // resize canvas height to fit new image
-  canvas.height = image.height * canvas.width / image.width;
+  canvas.height = image.height;
+  canvas.width = image.width;
 
-  // draw new image on it, scaling the image to fit in canvas
+  // draw new image on it
   ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
 }

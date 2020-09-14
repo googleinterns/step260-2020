@@ -12,11 +12,26 @@
   <script src="image-upload-validation.js"></script>
   <script src="get-blur-areas.js"></script>
   <script src="blur.js"></script>
+  <!--    material icons-->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
 </head>
 
 <body>
-<input type="file" id="upload-image"/>
-<div id="images-container"></div>
+<header>Blurer</header>
+<section id="images-container">
+  <input type="file" id="upload-image"/>
+  <label for="upload-image" class="button">Upload</label>
+  <canvas id="input-canvas" class="image"></canvas>
+  <div id="arrow">
+    <i class="material-icons" id="arrow-text">arrow_right_alt</i>
+  </div>
+  <canvas id="output-canvas" class="image"></canvas>
+  <div id="blur-input">
+    <label for="blurring-radius">Select blur amount:</label>
+    <br>
+    <input type="range" id="blurring-radius" min="0">
+  </div>
+  <a id="download-button" class="button">Download</a>
+</section>
 </body>
-
 </html>
