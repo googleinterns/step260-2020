@@ -18,12 +18,17 @@ document.addEventListener('DOMContentLoaded', async () => {
   await loadContent();
 });
 
+/**
+ * Function that displays the photos on the page.
+ * If the user is logged in, displays the photos with delete buttons attached.
+ * Else displays a login link.
+ */
 async function loadContent() {
   const contentDiv = document.getElementById('photos');
   let currentUser = await getCurrentUser();
 
   // If the user is not logged in show a login URL.
-  if(!currentUser.loggedIn) {
+  if (!currentUser.loggedIn) {
     contentDiv.innerHTML = `You need to <a ` +
         `href=${currentUser.loginURL}>login</a> to view your history.`;
     return;
@@ -35,13 +40,14 @@ async function loadContent() {
   const photosResponse = await fetch('/photos');
   const photos = await photosResponse.json();
 
-  for(let photo of photos) {
+  for (const photo of photos) {
     // This will contain both the image and the delete button.
     const container = document.createElement('span');
     container.classList.add('photo-container');
 
     // Get the image from URL.
-    const imageObj = await getImageFromUrl(`/photo?blob-key=${photo.blobKeyString}`);
+    const imageObj =
+        await getImageFromUrl(`/photo?blob-key=${photo.blobKeyString}`);
 
     // Convert rectangles returned by the request to Rect objects to be used
     // by our functions.
@@ -64,7 +70,7 @@ async function loadContent() {
     // Blur the image with the default blur radius.
     const blurRadius = getDefaultBlurRadius(blurRects);
     const blurredImage = getImageWithBlurredAreas(
-      blurRects, imageObj, blurRadius);
+        blurRects, imageObj, blurRadius);
     blurredImage.classList.add('photo');
     // Add the image to our container.
     container.appendChild(blurredImage);
@@ -89,7 +95,6 @@ async function loadContent() {
           currentUser = await getCurrentUser();
 
           updateUsedSpace(currentUser);
-          
         } else {
           const errorMessage = await response.text();
           const errorText = response.status + ' server error';
@@ -100,7 +105,7 @@ async function loadContent() {
           return;
         }
       });
-    }
+    };
     container.appendChild(deleteButton);
 
     // Add the container to the page.
@@ -108,16 +113,19 @@ async function loadContent() {
   }
 }
 
-/** Function to display the space used by the user. */
+/**
+ * Function to display the space used by the user.
+ * @param {User} currentUser
+ */
 function updateUsedSpace(currentUser) {
   // Convert bytes to megabytes with 2 decimals.
   const usedSpace = Math.ceil(currentUser.usedSpace / 1024 / 1024 * 100) / 100;
-  document.getElementById('used-space').innerHTML = 
+  document.getElementById('used-space').innerHTML =
       `Used space: ${usedSpace} / 50 MB`;
 }
 
 /** Function that returns the current user. */
 async function getCurrentUser() {
-  let userResponse = await fetch('/user');
+  const userResponse = await fetch('/user');
   return await userResponse.json();
 }
