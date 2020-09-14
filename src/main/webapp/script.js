@@ -53,7 +53,12 @@ async function handleImageUpload(event) {
 
     const fileName = event.target.files[0].name;
 
+    const downloadButton = document.getElementById('download-button');
+    downloadButton.classList.add('hide');
+
     processImage(imageUrl, blurAreas, imageType, fileName);
+
+    downloadButton.classList.remove('hide');
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });

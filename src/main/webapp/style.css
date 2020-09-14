@@ -89,6 +89,10 @@ header {
     width: 100%;
 }
 
+.hide {
+    display: none !important;
+}
+
 .list-mark {
     background-color: #E8990B;
     border: 2px solid #00888b;
