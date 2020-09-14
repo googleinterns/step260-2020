@@ -22,6 +22,14 @@
 document.addEventListener('DOMContentLoaded', () => {
   const CANVAS_WIDTH = 300;
 
+  const SAMPLE_IMAGE_URL = 'images/sample-image.jpeg';
+  const SAMPLE_IMAGE_BLUR_AREAS = [
+    {leftX: 87, topY: 405, height: 52, width: 50},
+    {leftX: 599, topY: 365, height: 73, width: 72},
+    {leftX: 460, topY: 329, height: 77, width: 76},
+    {leftX: 254, topY: 456, height: 48, width: 47},
+  ];
+
   const uploadButton = document.getElementById('upload-image');
   uploadButton.addEventListener('change', handleImageUpload);
 
@@ -36,9 +44,27 @@ document.addEventListener('DOMContentLoaded', () => {
   outputCanvas.setAttribute('width', CANVAS_WIDTH);
   imagesContainer.append(outputCanvas);
 
+  // put blur radius input into the image container
+  const rangeInput = createBlurRadiusInput();
+  imagesContainer.append(rangeInput);
+
   // add sample image on page - original and blurred one.
-  putSampleImagesOnPage();
+  processImage(SAMPLE_IMAGE_URL, SAMPLE_IMAGE_BLUR_AREAS);
 });
+
+/**
+ * Function to create scrolling bar for blurRadius.
+ * @return {HTMLInputElement}
+ */
+function createBlurRadiusInput() {
+  const rangeInput = document.createElement('input');
+
+  rangeInput.setAttribute('type', 'range');
+  rangeInput.setAttribute('id', 'blurring-radius');
+  rangeInput.setAttribute('min', 0);
+
+  return rangeInput;
+}
 
 /**
  * Function which is called when user chooses file to upload.
@@ -46,142 +72,14 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // if image is valid - put it on page (original and blurred one).
-    putImageOnPageAndBlur(event.target.files[0]);
+    // blur the image and update html page.
+    const imageUrl = URL.createObjectURL(event.target.files[0]);
+
+    const blurAreas = await getBlurAreas(event.target.files[0]);
+
+    processImage(imageUrl, blurAreas);
   }).catch((error) => {
-    // if image is not valid - display error message
-    alert(error.message);
-  });
-}
-
-/**
- * Function to validate the uploaded image.
- * If valid - returns nothing, if not - throws error.
- * @throws {Error} validation errors
- */
-async function validateImageUpload() {
-  // get FileList with all the files from input element.
-  const files = document.getElementById('upload-image').files;
-
-  // check if no files were uploaded.
-  if (files.length === 0) {
-    throw new Error('Nothing is uploaded');
-  }
-
-  // get first (and the only) file from FileList.
-  const file = files[0];
-
-  // check whether file is jpeg or png.
-  const fileType = await getImageTypeOrError(file);
-
-  // check file size.
-  validateImageSize(file, fileType);
-
-  // Image resolution can not be more than 1920x1080.
-  await validateImageResolution(file, 1920, 1080);
-}
-
-/**
- * Function to make sure the image is not too big.
- * @param {File} image
- * @param {string} imageType Can be 'png' or 'jpeg' only.
- */
-function validateImageSize(image, imageType) {
-  // This limit comes from simple calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BYTES_PER_PIXEL_IN_PNG
-  // 1920 x 1080 x 4 ~ 8294400 bytes ~ 8 mb
-  const PNG_LIMIT_MB = 8;
-  if (imageType === 'png' && image.size > PNG_LIMIT_MB * 1024 * 1024) {
-    throw new Error(
-        `File size should not exceed ${PNG_LIMIT_MB}MB for png images.` +
-        'The size of an uploaded png image is ' +
-        Math.ceil(image.size / 1024 / 1024) + 'MB');
-  }
-
-  // This limit comes from similar calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BITS_PER_PIXEL_IN_JPG
-  // 1920 x 1080 x 8.25 ~ 17107200 bits ~ 2 mb
-  const JPG_LIMIT_MB = 2;
-  if (imageType === 'jpeg' && image.size > JPG_LIMIT_MB * 1024 * 1024) {
-    throw new Error(
-        `File size should not exceed ${JPG_LIMIT_MB}MB for jpeg images.` +
-        'The size of an uploaded jpeg image is ' +
-        Math.ceil(image.size / 1024 / 1024) + 'MB');
-  }
-}
-
-/**
- * Function to get file type if it is png or jpeg
- * and throw error otherwise
- * @param {File} file
- * @return {Promise}
- */
-function getImageTypeOrError(file) {
-  return new Promise(function(resolve, reject) {
-    const fileReader = new FileReader();
-
-    fileReader.onloadend = function(e) {
-      // get first 4 bytes from file - they contain information
-      // about the extension.
-      const bytes = new Uint8Array(e.target.result);
-
-      // convert those bytes to string
-      let header = '';
-      for (let i = 0; i < bytes.length; i++) {
-        header += bytes[i].toString(16);
-      }
-
-      const PNG_HEADERS = ['89504e47'];
-      if (PNG_HEADERS.includes(header)) {
-        resolve('png');
-      }
-
-      const JPEG_HEADERS = ['ffd8ffe0', 'ffd8ffe1',
-        'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
-      if (JPEG_HEADERS.includes(header)) {
-        resolve('jpeg');
-      }
-
-      reject(new Error(
-          'Invalid file type. Only jpeg and png images can be uploaded'));
-    };
-
-    // read first 4 bytes from file
-    fileReader.readAsArrayBuffer(file.slice(0, 4));
-  });
-}
-
-/**
- * Function to make sure the image resolution is no
- * more than mxWidth x mxHeight
- * Promise returns error if this is not true and
- * nothing otherwise.
- * @param {File} imageFile
- * @param {Number} mxWidth
- * @param {Number} mxHeight
- * @return {Promise}
- */
-function validateImageResolution(imageFile, mxWidth, mxHeight) {
-  return new Promise(function(resolve, reject) {
-    // construct image object from the file
-    const imageObject = new Image();
-    const imageUrl = URL.createObjectURL(imageFile);
-
-    imageObject.onload = function() {
-      if (imageObject.width * imageObject.height >
-          mxWidth * mxHeight) {
-        reject(new Error(
-            'The image resolution can not exceed ' + mxWidth +
-            'x' + mxHeight + 'px. ' +
-            'The uploaded image resolution is ' +
-            imageObject.width + 'x' + imageObject.height + 'px'));
-        return;
-      }
-
-      resolve();
-    };
-
-    imageObject.src = imageUrl;
+    alert('ERROR: ' + error.message);
   });
 }
 
@@ -198,57 +96,98 @@ function createCanvasForId(id) {
 }
 
 /**
- * Function to blur image and put on page
- * original and blurred images
- * @param {File} imageFile
+ * Updates the page with new uploaded image.
+ * It calls blurring method, puts new and blurred
+ * images on canvases and updates blurRadius input
+ * bar for new image.
+ * @param {String} imageUrl
+ * @param {Array<Rect>} blurAreas
+ * @return {Promise<void>} nothing
  */
-async function putImageOnPageAndBlur(imageFile) {
-  const imageUrl = URL.createObjectURL(imageFile);
+async function processImage(imageUrl, blurAreas) {
+  const imageObj = await getImageFromUrl(imageUrl);
 
-  // create Image object from url to put it on canvas.
-  const imageObj = new Image();
-  imageObj.src = imageUrl;
+  const inputCanvas = document.getElementById('input-canvas');
+  const outputCanvas = document.getElementById('output-canvas');
 
-  // need to wait until image loads to put it anywhere.
-  imageObj.onload = async () => {
-    const inputCanvas = document.getElementById('input-canvas');
-    drawImageOnCanvas(imageObj, inputCanvas);
+  updateBlurRadiusInputBar(blurAreas, imageObj);
 
-    const blurAreas = await getBlurAreas(imageFile);
+  const blurRadiusInput = document.getElementById('blurring-radius');
 
-    const blurredImage = getImageWithBlurredAreas(blurAreas, imageObj);
+  // draw original and blurred images on page.
+  drawImageOnCanvas(imageObj, inputCanvas);
+  const blurredImage = getImageWithBlurredAreas(
+      blurAreas, imageObj, blurRadiusInput.value);
+  drawImageOnCanvas(blurredImage, outputCanvas);
+}
 
-    const outputCanvas = document.getElementById('output-canvas');
+/**
+ * Function to update blur radius input bar for new image.
+ * Sets max and default values to the bar, adds event
+ * listener to reblur the image when the bar is scrolled.
+ * We get the formula for default value from experiments and
+ * set max value to defaultValue * 2.
+ * We decided that the best blurRadius value
+ * depends mostly on the size of the area that we want to blur,
+ * which is why we have some sample area and adjust the best
+ * blur radius for it (which we get by experiments) to our
+ * image's blurAreas sizes.
+ * @param {Array<Rect>} blurAreas
+ * @param {Image} imageObj
+ */
+function updateBlurRadiusInputBar(blurAreas, imageObj) {
+  const SAMPLE_AREA_SIZE = 100 * 100;
+  const SAMPLE_BEST_BLUR_RADIUS = 12;
+
+  const DEFAULT_VALUE = Math.ceil(getAverageRectsArea(blurAreas) /
+      SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
+
+  const blurRadiusInput = document.getElementById('blurring-radius');
+
+  blurRadiusInput.max = DEFAULT_VALUE * 2;
+  blurRadiusInput.value = DEFAULT_VALUE;
+
+  const outputCanvas = document.getElementById('output-canvas');
+
+  // reblur image every time user scrolls the blurRadiusInput bar.
+  blurRadiusInput.onchange = (event) => {
+    const blurredImage = getImageWithBlurredAreas(
+        blurAreas, imageObj, event.target.value);
     drawImageOnCanvas(blurredImage, outputCanvas);
   };
 }
 
 /**
- * Function to draw sample image (blurred and not blurred)
- * on input and output canvases.
+ * Helper function to get average rect size of
+ * rects to blur.
+ * @param {Array<Rect>} rects
+ * @return {Number} average rect size.
  */
-async function putSampleImagesOnPage() {
-  const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
-  const BLURRED_SAMPLE_IMAGE_URL = 'images/blurred-hadgehog.png';
+function getAverageRectsArea(rects) {
+  let totalArea = 0;
 
-  /**
-   * @param {string} imageUrl
-   * @param {string} canvasId
-   */
-  const putImageOnCanvas = (imageUrl, canvasId) => {
-    // create Image object from url to put it on canvas.
-    const imageObj = new Image();
-    imageObj.src = imageUrl;
+  for (const rect of rects) {
+    totalArea += rect.width * rect.height;
+  }
 
-    // need to wait until image loads to put it anywhere.
-    imageObj.onload = () => {
-      const canvas = document.getElementById(canvasId);
-      drawImageOnCanvas(imageObj, canvas);
+  return totalArea / rects.length;
+}
+
+/**
+ * Helper function to get image object from url
+ * pointing to that image.
+ * @param {String} url
+ * @return {Promise<Image>}
+ */
+function getImageFromUrl(url) {
+  return new Promise(function(resolve) {
+    const image = new Image();
+    image.src = url;
+
+    image.onload = function() {
+      resolve(image);
     };
-  };
-
-  putImageOnCanvas(SAMPLE_IMAGE_URL, 'input-canvas');
-  putImageOnCanvas(BLURRED_SAMPLE_IMAGE_URL, 'output-canvas');
+  });
 }
 
 /**
