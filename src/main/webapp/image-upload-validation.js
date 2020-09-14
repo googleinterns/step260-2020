@@ -33,7 +33,8 @@ async function validateImageUpload() {
   // calculated as MAX_IMAGE_RESOLUTION * AVERAGE_SIZE_OF_IMAGE_OF_THIS_TYPE
   // and converted to Mb.
   const MAX_SIZES = {
-    'image/png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 / 1024 / 1024),
+    'image/png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 /
+        1024 / 1024),
     'image/jpeg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
         8 / 1024 / 1024),
   };
