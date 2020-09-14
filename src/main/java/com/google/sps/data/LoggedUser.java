@@ -36,6 +36,9 @@ import com.google.appengine.api.datastore.Query.SortDirection;
 /** Class containing a logged user. */
 public final class LoggedUser extends User {
 
+  // How much space in bytes can a user use to store photos.
+  public static final long USER_STORAGE_LIMIT = 50 * 1024 * 1024;
+
   private final String id;
   private Long usedSpace;
   private final String logoutURL;

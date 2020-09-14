@@ -118,10 +118,19 @@ async function loadContent() {
  * @param {User} currentUser
  */
 function updateUsedSpace(currentUser) {
-  // Convert bytes to megabytes with 2 decimals.
-  const usedSpace = Math.ceil(currentUser.usedSpace / 1024 / 1024 * 100) / 100;
+  const usedSpace = bytesToMegabytes(currentUser.usedSpace);
+  const maximumSpace = bytesToMegabytes(currentUser.USER_STORAGE_LIMIT);
   document.getElementById('used-space').innerHTML =
-      `Used space: ${usedSpace} / 50 MB`;
+      `Used space: ${usedSpace} / ${maximumSpace} MB`;
+}
+
+/**
+ * Function that converts bytes to megabytes with 2 decimals.
+ * @param {Number} bytes
+ * @return {Number}
+ */
+function bytesToMegabytes(bytes) {
+  return Math.ceil(bytes / 1024 / 1024 * 100) / 100;
 }
 
 /** Function that returns the current user. */
