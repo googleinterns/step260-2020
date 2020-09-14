@@ -62,8 +62,8 @@ public class PhotosServlet extends HttpServlet {
 
     // Store photos in an array.
     ArrayList<BlurImage> photos = new ArrayList<>();
+    String userId = loggedUser.getId();
     for (Entity entity : photoEntities) {
-      String userId = loggedUser.getId();
       long id = entity.getKey().getId();
       BlobKey blobKey = (BlobKey) entity.getProperty("blobKey");
       String jsonBlurRectangles = (String) entity.getProperty("jsonBlurRectangles");
