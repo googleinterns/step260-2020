@@ -1,0 +1,140 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+'use strict';
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await loadContent();
+});
+
+/**
+ * Function that displays the photos on the page.
+ * If the user is logged in, displays the photos with delete buttons attached.
+ * Else displays a login link.
+ */
+async function loadContent() {
+  const contentDiv = document.getElementById('photos');
+  let currentUser = await getCurrentUser();
+
+  // If the user is not logged in show a login URL.
+  if (!currentUser.loggedIn) {
+    contentDiv.innerHTML = `You need to <a ` +
+        `href=${currentUser.loginURL}>login</a> to view your history.`;
+    return;
+  }
+
+  updateUsedSpace(currentUser);
+
+  // Display the photos.
+  const photosResponse = await fetch('/photos');
+  const photos = await photosResponse.json();
+
+  for (const photo of photos) {
+    // This will contain both the image and the delete button.
+    const container = document.createElement('span');
+    container.classList.add('photo-container');
+
+    // Get the image from URL.
+    const imageObj =
+        await getImageFromUrl(`/photo?blob-key=${photo.blobKeyString}`);
+
+    // Convert rectangles returned by the request to Rect objects to be used
+    // by our functions.
+    const responseRects = JSON.parse(photo.jsonBlurRectangles);
+    const blurRects = [];
+    for (const area of responseRects) {
+      let rect;
+      try {
+        rect = new Rect(area, imageObj);
+      } catch (error) {
+        // If rect is invalid, log and ignore it.
+        console.log('Invalid rectangle : ' + error.message,
+            area);
+        continue;
+      }
+
+      blurRects.push(rect);
+    }
+
+    // Blur the image with the default blur radius.
+    const blurRadius = getDefaultBlurRadius(blurRects);
+    const blurredImage = getImageWithBlurredAreas(
+        blurRects, imageObj, blurRadius);
+    blurredImage.classList.add('photo');
+    // Add the image to our container.
+    container.appendChild(blurredImage);
+
+    // Create the delete button and add it to the container.
+    const deleteButton = document.createElement('button');
+    deleteButton.innerHTML = 'DELETE';
+    deleteButton.classList.add('photo-delete');
+    deleteButton.onclick = () => {
+      // Make the button inactive so the user can't click it multiple times.
+      deleteButton.disable = true;
+
+      // Delete the photo from server.
+      fetch(`/photos?photo-id=${photo.id}`, {
+        method: 'DELETE',
+      }).then(async (response) => {
+        if (response.ok) {
+          // Delete the photo from page.
+          contentDiv.removeChild(container);
+
+          // Reload user to update usedSpace.
+          currentUser = await getCurrentUser();
+
+          updateUsedSpace(currentUser);
+        } else {
+          const errorMessage = await response.text();
+          const errorText = response.status + ' server error';
+
+          alert(errorText + ' : ' + errorMessage);
+
+          reject(new Error(errorText));
+          return;
+        }
+      });
+    };
+    container.appendChild(deleteButton);
+
+    // Add the container to the page.
+    contentDiv.appendChild(container);
+  }
+}
+
+/**
+ * Function to display the space used by the user.
+ * @param {User} currentUser
+ */
+function updateUsedSpace(currentUser) {
+  const usedSpace = bytesToMegabytes(currentUser.usedSpace);
+  const maximumSpace = bytesToMegabytes(currentUser.USER_STORAGE_LIMIT);
+  document.getElementById('used-space').innerHTML =
+      `Used space: ${usedSpace} / ${maximumSpace} MB`;
+}
+
+/**
+ * Function that converts bytes to megabytes with 2 decimals.
+ * @param {Number} bytes
+ * @return {Number}
+ */
+function bytesToMegabytes(bytes) {
+  return Math.ceil(bytes / 1024 / 1024 * 100) / 100;
+}
+
+/** Function that returns the current user. */
+async function getCurrentUser() {
+  const userResponse = await fetch('/user');
+  return await userResponse.json();
+}

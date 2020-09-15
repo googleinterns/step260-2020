@@ -58,9 +58,6 @@ import javax.servlet.http.HttpServletResponse;
 @WebServlet("/get-blur-areas")
 public class GetBlurAreasServlet extends HttpServlet {
 
-  // How much space in bytes can a user use to store photos.
-  private static final long USER_STORAGE_LIMIT = 50 * 1024 * 1024;
-
   // Image types that are supported by our application.
   private static final ArrayList<String> supportedTypes =
       new ArrayList<>(Arrays.asList("image/jpeg", "image/png"));
@@ -139,7 +136,7 @@ public class GetBlurAreasServlet extends HttpServlet {
 
       // If the total space doesn't exceed the limit, store the photo in database. If it exceeds, we
       // simply ignore it for now.
-      if (totalSpace <= USER_STORAGE_LIMIT) {
+      if (totalSpace <= LoggedUser.USER_STORAGE_LIMIT) {
         // Create the imageEntity.
         Entity imageEntity = new Entity("BlurImage");
         imageEntity.setProperty("userId", loggedUser.getId());

@@ -15,6 +15,7 @@
 package com.google.sps.servlets;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.sps.data.User;
 import java.io.IOException;
 import javax.servlet.annotation.WebServlet;
@@ -34,8 +35,13 @@ public class UserServlet extends HttpServlet {
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
     User user = User.getCurrentUser();
 
+    // Build a custom Gson object to include class' static fields in the JSON. We do this because
+    // we want USER_STORAGE_LIMIT on the frontend.
+    GsonBuilder gsonBuilder = new GsonBuilder();
+    gsonBuilder.excludeFieldsWithModifiers(java.lang.reflect.Modifier.TRANSIENT);
+    Gson gson = gsonBuilder.create();
+
     // Convert the user to JSON.
-    Gson gson = new Gson();
     String json = gson.toJson(user);
 
     // Send the JSON as the response.
