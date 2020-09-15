@@ -93,17 +93,17 @@ describe('filling method', function() {
   function makeTest(testCase) {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
-        const rectsToFill = testCase.rects;
-
-        // get Image object to pass to getImageWithFilledAreas
+        // get ImageObject object to pass to getImageWithFilledAreas
         // function as parameter
-        const inputImage = await getImageFromPath(testCase.inputImageUrl);
+        const inputImage = new ImageObject(testCase.inputImageUrl,
+            await getImageFromPath(testCase.inputImageUrl), 'somename',
+            'sometype', testCase.rects);
 
         // get Blob to compare with the output of
         // getImageWithFilledAreas function
         const expectedImage = await getFileBlob(testCase.expectedImageUrl);
 
-        getImageWithFilledAreas(rectsToFill, inputImage).toBlob(
+        getImageWithFilledAreas(inputImage).object.toBlob(
             async function(filledImage) {
               resemble(expectedImage)
                   .compareTo(filledImage)

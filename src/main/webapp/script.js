@@ -19,16 +19,17 @@
  * Add event listener to image upload button.
  * Add canvases to the page, put sample image to them.
  */
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const CANVAS_WIDTH = 300;
 
-  const SAMPLE_IMAGE_URL = 'images/sample-image.jpeg';
-  const SAMPLE_IMAGE_BLUR_AREAS = [
-    {leftX: 87, topY: 405, height: 52, width: 50},
-    {leftX: 599, topY: 365, height: 73, width: 72},
-    {leftX: 460, topY: 329, height: 77, width: 76},
-    {leftX: 254, topY: 456, height: 48, width: 47},
-  ];
+  const sampleImage = new ImageObject('images/sample-image.jpeg',
+      await getImageFromUrl('images/sample-image.jpeg'),
+      'sample-image.jpeg', 'image/jpeg', [
+        {leftX: 87, topY: 405, height: 52, width: 50},
+        {leftX: 599, topY: 365, height: 73, width: 72},
+        {leftX: 460, topY: 329, height: 77, width: 76},
+        {leftX: 254, topY: 456, height: 48, width: 47},
+      ]);
 
   const uploadButton = document.getElementById('upload-image');
   uploadButton.addEventListener('change', handleImageUpload);
@@ -48,9 +49,32 @@ document.addEventListener('DOMContentLoaded', () => {
   const rangeInput = createBlurRadiusInput();
   imagesContainer.append(rangeInput);
 
+  // put download button into the image container
+  const downloadButton = createDownloadButton();
+  imagesContainer.append(downloadButton);
+
   // add sample image on page - original and blurred one.
-  processImage(SAMPLE_IMAGE_URL, SAMPLE_IMAGE_BLUR_AREAS);
+  processImage(sampleImage);
 });
+
+/**
+ * Constructor for image object.
+ * @param {String} imageUrl
+ * @param {Image|HTMLCanvasElement}imageObject
+ * @param {String} imageFileName
+ * @param {String} imageType
+ * @param {Array<Rect>} blurAreas
+ * @constructor
+ */
+function ImageObject(imageUrl, imageObject, imageFileName,
+    imageType, blurAreas) {
+  this.url = imageUrl;
+  this.object = imageObject;
+  this.fileName = imageFileName;
+  this.type = imageType;
+  this.blurAreas = blurAreas;
+}
+
 
 /**
  * Function to create scrolling bar for blurRadius.
@@ -67,6 +91,19 @@ function createBlurRadiusInput() {
 }
 
 /**
+ * Function to create a button to download
+ * blurred image.
+ * @return {HTMLAnchorElement}
+ */
+function createDownloadButton() {
+  const downloadButton = document.createElement('a');
+  downloadButton.setAttribute('id', 'download-button');
+  downloadButton.innerHTML = 'Download';
+
+  return downloadButton;
+}
+
+/**
  * Function which is called when user chooses file to upload.
  * @param {Event} event "Change" event on image upload button.
  */
@@ -75,9 +112,17 @@ async function handleImageUpload(event) {
     // blur the image and update html page.
     const imageUrl = URL.createObjectURL(event.target.files[0]);
 
+    const imageObject = await getImageFromUrl(imageUrl);
+
     const blurAreas = await getBlurAreas(event.target.files[0]);
 
-    processImage(imageUrl, blurAreas);
+    const imageType = getImageTypeOrError(event.target.files[0]);
+
+    const fileName = event.target.files[0].name;
+
+    const image = new ImageObject(imageUrl, imageObject, fileName,
+        imageType, blurAreas);
+    processImage(image);
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });
@@ -98,27 +143,41 @@ function createCanvasForId(id) {
 /**
  * Updates the page with new uploaded image.
  * It calls blurring method, puts new and blurred
- * images on canvases and updates blurRadius input
- * bar for new image.
- * @param {String} imageUrl
- * @param {Array<Rect>} blurAreas
- * @return {Promise<void>} nothing
+ * images on canvases, updates blurRadius input
+ * bar for new image and download button for
+ * every new blurred image.
+ * @param {ImageObject} image
  */
-async function processImage(imageUrl, blurAreas) {
-  const imageObj = await getImageFromUrl(imageUrl);
-
+async function processImage(image) {
   const inputCanvas = document.getElementById('input-canvas');
   const outputCanvas = document.getElementById('output-canvas');
 
-  updateBlurRadiusInputBar(blurAreas, imageObj);
+  updateBlurRadiusInputBar(image);
 
   const blurRadiusInput = document.getElementById('blurring-radius');
 
   // draw original and blurred images on page.
-  drawImageOnCanvas(imageObj, inputCanvas);
+  drawImageOnCanvas(image.object, inputCanvas);
+
   const blurredImage = getImageWithBlurredAreas(
-      blurAreas, imageObj, blurRadiusInput.value);
-  drawImageOnCanvas(blurredImage, outputCanvas);
+      image, blurRadiusInput.value);
+  drawImageOnCanvas(blurredImage.object, outputCanvas);
+
+  updateDownloadButton(blurredImage);
+}
+
+/**
+ * Function to update download button to download new image.
+ * @param {ImageObject} image Image that we are making a
+ * download button for.
+ */
+function updateDownloadButton(image) {
+  const downloadButton = document.getElementById('download-button');
+
+  downloadButton.href = image.url;
+
+  // the name of the file which will be downloaded.
+  downloadButton.download = image.fileName;
 }
 
 /**
@@ -132,11 +191,11 @@ async function processImage(imageUrl, blurAreas) {
  * which is why we have some sample area and adjust the best
  * blur radius for it (which we get by experiments) to our
  * image's blurAreas sizes.
- * @param {Array<Rect>} blurAreas
- * @param {Image} imageObj
+ * @param {ImageObject} image
  */
-function updateBlurRadiusInputBar(blurAreas, imageObj) {
-  const DEFAULT_VALUE = getDefaultBlurRadius(blurAreas);
+function updateBlurRadiusInputBar(image) {
+  const DEFAULT_VALUE = getDefaultBlurRadius(image.blurAreas);
+
   const blurRadiusInput = document.getElementById('blurring-radius');
 
   blurRadiusInput.max = DEFAULT_VALUE * 2;
@@ -147,7 +206,9 @@ function updateBlurRadiusInputBar(blurAreas, imageObj) {
   // reblur image every time user scrolls the blurRadiusInput bar.
   blurRadiusInput.onchange = (event) => {
     const blurredImage = getImageWithBlurredAreas(
-        blurAreas, imageObj, event.target.value);
-    drawImageOnCanvas(blurredImage, outputCanvas);
+        image, event.target.value);
+    drawImageOnCanvas(blurredImage.object, outputCanvas);
+
+    updateDownloadButton(blurredImage);
   };
 }

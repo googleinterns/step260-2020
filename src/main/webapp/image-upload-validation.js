@@ -33,8 +33,9 @@ async function validateImageUpload() {
   // calculated as MAX_IMAGE_RESOLUTION * AVERAGE_SIZE_OF_IMAGE_OF_THIS_TYPE
   // and converted to Mb.
   const MAX_SIZES = {
-    'png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 / 1024 / 1024),
-    'jpeg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
+    'image/png': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 4 /
+        1024 / 1024),
+    'image/jpeg': Math.round(MAX_IMAGE_HEIGHT * MAX_IMAGE_WIDTH * 8.25 /
         8 / 1024 / 1024),
   };
 
@@ -98,13 +99,13 @@ function getImageTypeOrError(file) {
 
       const PNG_HEADERS = ['89504e47'];
       if (PNG_HEADERS.includes(header)) {
-        resolve('png');
+        resolve('image/png');
       }
 
       const JPEG_HEADERS = ['ffd8ffe0', 'ffd8ffe1',
         'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
       if (JPEG_HEADERS.includes(header)) {
-        resolve('jpeg');
+        resolve('image/jpeg');
       }
 
       reject(new Error(
