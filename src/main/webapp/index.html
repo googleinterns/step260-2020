@@ -26,7 +26,18 @@
 <header>Blurer</header>
 <section id="images-container">
   <input type="file" id="upload-image"/>
-  <label for="upload-image" class="button">Upload</label>
+  <label for="upload-image" id="upload-label" class="button">Upload</label>
+  <div id="blurring-options">
+    <p>
+      <input type="checkbox" class="blur-option"/> Blur faces
+    </p>
+    <p>
+      <input type="checkbox" class="blur-option"/> Blur car plates
+    </p>
+    <p>
+      <input type="checkbox" class="blur-option"/> Blur company logos
+    </p>
+  </div>
   <canvas id="input-canvas" class="image"></canvas>
   <div id="arrow">
     <i class="material-icons" id="arrow-text">arrow_right_alt</i>
