@@ -65,7 +65,13 @@ async function handleImageUpload(event) {
 
     const imageObject = await getImageFromUrl(imageUrl);
 
-    const blurAreas = await getBlurAreas(event.target.files[0]);
+    // get blurring options.
+    const faceBlur = document.getElementById('face-blur').checked;
+    const plateBlur = document.getElementById('plate-blur').checked;
+    const logoBlur = document.getElementById('logo-blur').checked;
+
+    const blurAreas = await getBlurAreas(event.target.files[0], faceBlur,
+        plateBlur, logoBlur);
 
     const imageType = getImageTypeOrError(event.target.files[0]);
 
