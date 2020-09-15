@@ -25,12 +25,12 @@ header {
   display: grid;
   grid-gap: 20px 5%;
   grid-template-areas:
-          ". . blurring-options"
-          "upload-button . blurring-options"
-          ". . blurring-options"
-          "original-image arrow blurred-image"
-          ". . range-input"
-          ". . download-button";
+    ". . blurring-options"
+    "upload-button . blurring-options"
+    ". . blurring-options"
+    "original-image arrow blurred-image"
+    ". . range-input"
+    ". . download-button";
   grid-template-columns: 45% 1fr 45%;
   justify-content: center;
   margin-top: 10px;
@@ -40,13 +40,13 @@ header {
 @media screen and (max-width: 992px) {
   #images-container {
     grid-template-areas:
-            "blurring-options"
-            "upload-button"
-            "original-image"
-            "arrow"
-            "blurred-image"
-            "range-input"
-            "download-button";
+      "blurring-options"
+      "upload-button"
+      "original-image"
+      "arrow"
+      "blurred-image"
+      "range-input"
+      "download-button";
     grid-template-columns: 100%;
   }
 }
@@ -206,21 +206,13 @@ input[type=range]::-webkit-slider-thumb {
   transition-duration: 0.2s;
 }
 
-.blur-option:focus, .blur-option:checked:focus {
-  outline: none;
-}
-
-.blur-option:hover, .blur-option:checked:hover {
-  border-radius: 10px;
-}
-
 .blur-option:checked {
   background-color: #fbfcf3;
   border: 3px solid #e8990b;
   color: #99a1a7;
 }
 
-.blur-option:checked:after {
+.blur-option:checked::after {
   content: '\2714';
   font-size: 32px;
   position: absolute;
@@ -228,4 +220,20 @@ input[type=range]::-webkit-slider-thumb {
   right: -10px;
   color: #e8990b;
   text-shadow: 1px 1px 1px #042829;
+}
+
+.blur-option:focus {
+  outline: none;
+}
+
+.blur-option:hover {
+  border-radius: 10px;
+}
+
+.blur-option:checked:focus {
+  outline: none;
+}
+
+.blur-option:checked:hover {
+  border-radius: 10px;
 }

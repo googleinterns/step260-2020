@@ -62,6 +62,9 @@ function getFormUploadUrl() {
  * Function to send image to server and get response
  * with areas to blur.
  * @param {File} image
+ * @param {Boolean} faceBlur
+ * @param {Boolean} plateBlur
+ * @param {Boolean} logoBlur
  * @return {Promise<Array<Rect>>} blurAreas
  */
 function getBlurAreas(image, faceBlur, plateBlur, logoBlur) {
