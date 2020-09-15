@@ -33,6 +33,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   uploadButton.addEventListener('change', handleImageUpload);
 
   // add sample image on page - original and blurred one.
+  const inputCanvas = document.getElementById('input-canvas');
+  drawImageOnCanvas(sampleImage.object, inputCanvas);
+
   processImage(sampleImage);
 });
 
@@ -60,34 +63,86 @@ function ImageObject(imageUrl, imageObject, imageFileName,
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // blur the image and update html page.
-    const imageUrl = URL.createObjectURL(event.target.files[0]);
+    freezePage();
 
-    const imageObject = await getImageFromUrl(imageUrl);
+    const imageFile = event.target.files[0];
 
     // get blurring options.
     const faceBlur = document.getElementById('face-blur').checked;
     const plateBlur = document.getElementById('plate-blur').checked;
     const logoBlur = document.getElementById('logo-blur').checked;
 
-    const blurAreas = await getBlurAreas(event.target.files[0], faceBlur,
+    const image = await getImageObjectWithNoBlurAreas(imageFile);
+
+    // put original image on page.
+    const inputCanvas = document.getElementById('input-canvas');
+    drawImageOnCanvas(image.object, inputCanvas);
+
+    image.blurAreas = await getBlurAreas(imageFile, faceBlur,
         plateBlur, logoBlur);
 
-    const imageType = getImageTypeOrError(event.target.files[0]);
-
-    const fileName = event.target.files[0].name;
-
-    const downloadButton = document.getElementById('download-button');
-    downloadButton.classList.add('hide');
-
-    const image = new ImageObject(imageUrl, imageObject, fileName,
-        imageType, blurAreas);
     processImage(image);
 
-    downloadButton.classList.remove('hide');
+    unfreezePage();
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });
+}
+
+/**
+ * Function to get ImageObject from uploaded file
+ * with blurAreas property set to empty.
+ * @param {File} imageFile
+ * @return {Promise<ImageObject>}
+ */
+async function getImageObjectWithNoBlurAreas(imageFile) {
+  const imageUrl = URL.createObjectURL(imageFile);
+  const imageObject = await getImageFromUrl(imageUrl);
+  const imageType = getImageTypeOrError(imageFile);
+  const fileName = imageFile.name;
+
+  return new ImageObject(imageUrl, imageObject, fileName,
+      imageType, []);
+}
+
+/**
+ * Function to disable DOM elements and tell
+ * the user that their image is being
+ * processed.
+ */
+function freezePage() {
+  const uploadButton = document.getElementById('upload-image');
+  const downloadButton = document.getElementById('download-button');
+  const outputCanvas = document.getElementById('output-canvas');
+
+  downloadButton.classList.add('hide');
+  downloadButton.disabled = true;
+  uploadButton.disabled = true;
+
+  outputCanvas.classList.add('hide');
+
+  const loadingGif = document.createElement('img');
+  loadingGif.src = 'images/loading.gif';
+  loadingGif.id = 'loading-gif';
+  outputCanvas.after(loadingGif);
+}
+
+/**
+ * Function to enable DOM elements back from freezing.
+ */
+function unfreezePage() {
+  const uploadButton = document.getElementById('upload-image');
+  const downloadButton = document.getElementById('download-button');
+  const outputCanvas = document.getElementById('output-canvas');
+
+  downloadButton.classList.remove('hide');
+  downloadButton.disabled = false;
+  uploadButton.disabled = false;
+
+  outputCanvas.classList.remove('hide');
+
+  const loadingGif = document.getElementById('loading-gif');
+  loadingGif.remove();
 }
 
 /**
@@ -99,16 +154,13 @@ async function handleImageUpload(event) {
  * @param {ImageObject} image
  */
 async function processImage(image) {
-  const inputCanvas = document.getElementById('input-canvas');
   const outputCanvas = document.getElementById('output-canvas');
 
   updateBlurRadiusInputBar(image);
 
   const blurRadiusInput = document.getElementById('blurring-radius');
 
-  // draw original and blurred images on page.
-  drawImageOnCanvas(image.object, inputCanvas);
-
+  // draw blurred image on page.
   const blurredImage = getImageWithBlurredAreas(
       image, blurRadiusInput.value);
   drawImageOnCanvas(blurredImage.object, outputCanvas);
