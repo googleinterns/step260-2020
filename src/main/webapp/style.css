@@ -79,6 +79,11 @@ header {
   width: 100%;
 }
 
+#loading-gif {
+  grid-area: blurred-image;
+  justify-self: center;
+}
+
 .hide {
   display: none !important;
 }
