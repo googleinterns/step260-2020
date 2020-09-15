@@ -64,7 +64,7 @@ function getFormUploadUrl() {
  * @param {File} image
  * @return {Promise<Array<Rect>>} blurAreas
  */
-function getBlurAreas(image) {
+function getBlurAreas(image, faceBlur, plateBlur, logoBlur) {
   return new Promise(async function(resolve, reject) {
     // get new blobstore upload url.
     const postUrl = await getFormUploadUrl().catch((error) => {
@@ -78,6 +78,15 @@ function getBlurAreas(image) {
     // create form
     const formData = new FormData();
     formData.append('image', image);
+    if (faceBlur) {
+      formData.append('face-blur', 'on');
+    }
+    if (plateBlur) {
+      formData.append('plate-blur', 'on');
+    }
+    if (logoBlur) {
+      formData.append('logo-blur', 'on');
+    }
 
     fetch(postUrl, {
       method: 'POST',
