@@ -24,7 +24,13 @@ header {
 #images-container {
   display: grid;
   grid-gap: 20px 5%;
-  grid-template-areas: "upload-button . ." "original-image arrow blurred-image" ". . range-input" ". . download-button";
+  grid-template-areas:
+          ". . blurring-options"
+          "upload-button . blurring-options"
+          ". . blurring-options"
+          "original-image arrow blurred-image"
+          ". . range-input"
+          ". . download-button";
   grid-template-columns: 45% 1fr 45%;
   justify-content: center;
   margin-top: 10px;
@@ -33,12 +39,19 @@ header {
 
 @media screen and (max-width: 992px) {
   #images-container {
-    grid-template-areas: "upload-button" "original-image" "arrow" "blurred-image" "range-input" "download-button";
-    grid-template-columns: 100%;
+      grid-template-areas:
+              "upload-button"
+              "blurring-options"
+              "original-image"
+              "arrow"
+              "blurred-image"
+              "range-input"
+              "download-button";
+      grid-template-columns: 100%;
   }
 }
 
-#upload-image {
+#upload-label {
   grid-area: upload-button;
 }
 
@@ -68,6 +81,10 @@ header {
   align-items: center;
   display: flex;
   grid-area: arrow;
+}
+
+#blurring-options {
+    grid-area: blurring-options;
 }
 
 #arrow-text {
