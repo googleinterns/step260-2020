@@ -93,6 +93,9 @@ function drawImageOnCanvas(image, canvas) {
  * @constructor
  */
 function Rect(rect, image) {
+  // for unblurring feature.
+  this.toBeBlurred = true;
+
   if (!Array.isArray(rect)) {
     throw new Error('Object passed here is not an Array. ' +
         'It must be an Array of points');

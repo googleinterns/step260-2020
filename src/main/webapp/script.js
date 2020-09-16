@@ -23,10 +23,10 @@ document.addEventListener('DOMContentLoaded', async () => {
   const sampleImage = new ImageObject('images/sample-image.jpeg',
       await getImageFromUrl('images/sample-image.jpeg'),
       'sample-image.jpeg', 'image/jpeg', [
-        {leftX: 87, topY: 405, height: 52, width: 50},
-        {leftX: 599, topY: 365, height: 73, width: 72},
-        {leftX: 460, topY: 329, height: 77, width: 76},
-        {leftX: 254, topY: 456, height: 48, width: 47},
+        {leftX: 87, topY: 405, height: 52, width: 50, toBeBlurred: true},
+        {leftX: 599, topY: 365, height: 73, width: 72, toBeBlurred: true},
+        {leftX: 460, topY: 329, height: 77, width: 76, toBeBlurred: true},
+        {leftX: 254, topY: 456, height: 48, width: 47, toBeBlurred: true},
       ]);
 
   const uploadButton = document.getElementById('upload-image');
@@ -160,6 +160,57 @@ async function processImage(image) {
   drawImageOnCanvas(blurredImage.object, outputCanvas);
 
   updateDownloadButton(blurredImage);
+
+  outputCanvas.onclick = (event) => {
+    tryToUnblurArea(event, image);
+  };
+}
+
+/**
+ * Function to handle click on output canvas
+ * and toggle blurness of rects to blur
+ * if any were clicked.
+ * @param {MouseEvent} event
+ * @param {ImageObject} image
+ */
+function tryToUnblurArea(event, image) {
+  const outputCanvas = document.getElementById('output-canvas');
+
+  // coordinates of click.
+  const eventX = event.offsetX;
+  const eventY = event.offsetY;
+
+  for (const blurRect of image.blurAreas) {
+    const scaleForCanvas = (propertyToScale) => {
+      return propertyToScale * outputCanvas.clientWidth / image.object.width;
+    };
+
+    // blurRect has all properties in original image coordinates,
+    // click event is in canvas coordinates.
+    // Scale blurRect to be in canvas coordinates.
+    const scaledRect = {
+      'leftX': scaleForCanvas(blurRect.leftX),
+      'topY': scaleForCanvas(blurRect.topY),
+      'rightX': scaleForCanvas(blurRect.leftX) +
+          scaleForCanvas(blurRect.width),
+      'bottomY': scaleForCanvas(blurRect.topY) +
+          scaleForCanvas(blurRect.height),
+    };
+
+    // if we clicked on this rect - toggle its visibility.
+    if (scaledRect.leftX <= eventX && eventX <= scaledRect.rightX &&
+        scaledRect.topY <= eventY && eventY <= scaledRect.bottomY) {
+      blurRect.toBeBlurred = !blurRect.toBeBlurred;
+
+      const blurRadiusInput = document.getElementById('blurring-radius');
+
+      const blurredImage = getImageWithBlurredAreas(
+          image, blurRadiusInput.value);
+      drawImageOnCanvas(blurredImage.object, outputCanvas);
+
+      updateDownloadButton(blurredImage);
+    }
+  }
 }
 
 /**
