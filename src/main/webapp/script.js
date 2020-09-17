@@ -143,26 +143,19 @@ function unfreezePage() {
  * Updates the page with new uploaded image.
  * It calls blurring method, puts new and blurred
  * images on canvases, updates blurRadius input
- * bar for new image and download button for
- * every new blurred image.
+ * bar for new image, download button for
+ * every new blurred image and adds click
+ * event on output canvas for specific blur.
  * @param {ImageObject} image
  */
 async function processImage(image) {
-  const outputCanvas = document.getElementById('output-canvas');
-
   updateBlurRadiusInputBar(image);
 
-  const blurRadiusInput = document.getElementById('blurring-radius');
+  updateBlurredImage(image);
 
-  // draw blurred image on page.
-  const blurredImage = getImageWithBlurredAreas(
-      image, blurRadiusInput.value);
-  drawImageOnCanvas(blurredImage.object, outputCanvas);
-
-  updateDownloadButton(blurredImage);
-
+  const outputCanvas = document.getElementById('output-canvas');
   outputCanvas.onclick = (event) => {
-    tryToUnblurArea(event, image);
+    toggleAreaBlur(event, image);
   };
 }
 
@@ -173,16 +166,19 @@ async function processImage(image) {
  * @param {MouseEvent} event
  * @param {ImageObject} image
  */
-function tryToUnblurArea(event, image) {
+function toggleAreaBlur(event, image) {
   const outputCanvas = document.getElementById('output-canvas');
 
   // coordinates of click.
   const eventX = event.offsetX;
   const eventY = event.offsetY;
 
+  let wasSomeRectClicked = false;
+
   for (const blurRect of image.blurAreas) {
-    const scaleForCanvas = (propertyToScale) => {
-      return propertyToScale * outputCanvas.clientWidth / image.object.width;
+    // Scale coordinate from image coordinates to canvas coordinates.
+    const scaleForCanvas = (coordinate) => {
+      return coordinate * outputCanvas.clientWidth / image.object.width;
     };
 
     // blurRect has all properties in original image coordinates,
@@ -191,26 +187,39 @@ function tryToUnblurArea(event, image) {
     const scaledRect = {
       'leftX': scaleForCanvas(blurRect.leftX),
       'topY': scaleForCanvas(blurRect.topY),
-      'rightX': scaleForCanvas(blurRect.leftX) +
-          scaleForCanvas(blurRect.width),
-      'bottomY': scaleForCanvas(blurRect.topY) +
-          scaleForCanvas(blurRect.height),
+      'rightX': scaleForCanvas(blurRect.leftX +
+          blurRect.width),
+      'bottomY': scaleForCanvas(blurRect.topY +
+          blurRect.height),
     };
 
-    // if we clicked on this rect - toggle its visibility.
     if (scaledRect.leftX <= eventX && eventX <= scaledRect.rightX &&
         scaledRect.topY <= eventY && eventY <= scaledRect.bottomY) {
       blurRect.toBeBlurred = !blurRect.toBeBlurred;
-
-      const blurRadiusInput = document.getElementById('blurring-radius');
-
-      const blurredImage = getImageWithBlurredAreas(
-          image, blurRadiusInput.value);
-      drawImageOnCanvas(blurredImage.object, outputCanvas);
-
-      updateDownloadButton(blurredImage);
+      wasSomeRectClicked = true;
     }
   }
+
+  if (wasSomeRectClicked) {
+    updateBlurredImage(image);
+  }
+}
+
+/**
+ * Function to blur image and update the page with it.
+ * Calls blurring function, draws blurred image
+ * on canvas, updates download button.
+ * @param {ImageObject} image
+ */
+function updateBlurredImage(image) {
+  const outputCanvas = document.getElementById('output-canvas');
+  const blurRadiusInput = document.getElementById('blurring-radius');
+
+  const blurredImage = getImageWithBlurredAreas(
+      image, blurRadiusInput.value);
+  drawImageOnCanvas(blurredImage.object, outputCanvas);
+
+  updateDownloadButton(blurredImage);
 }
 
 /**
@@ -248,14 +257,8 @@ function updateBlurRadiusInputBar(image) {
   blurRadiusInput.max = DEFAULT_VALUE * 2;
   blurRadiusInput.value = DEFAULT_VALUE;
 
-  const outputCanvas = document.getElementById('output-canvas');
-
   // reblur image every time user scrolls the blurRadiusInput bar.
   blurRadiusInput.onchange = (event) => {
-    const blurredImage = getImageWithBlurredAreas(
-        image, event.target.value);
-    drawImageOnCanvas(blurredImage.object, outputCanvas);
-
-    updateDownloadButton(blurredImage);
+    updateBlurredImage(image);
   };
 }
