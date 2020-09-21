@@ -93,7 +93,6 @@ function drawImageOnCanvas(image, canvas) {
  * @constructor
  */
 function Rect(rect, image) {
-  // for unblurring feature.
   this.toBeBlurred = true;
 
   if (!Array.isArray(rect)) {

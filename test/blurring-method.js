@@ -117,6 +117,28 @@ describe('blurring method', function() {
         },
       ],
     },
+    {
+      'description': 'one rect not blurred',
+      'inputImageUrl': 'test-files/64kb.jpg',
+      'expectedImageUrl': 'blurred/test6.png',
+      'blurRadius': 10,
+      'rects': [
+        {
+          'leftX': 0,
+          'topY': 0,
+          'width': 100,
+          'height': 100,
+          'toBeBlurred': true,
+        },
+        {
+          'leftX': 100,
+          'topY': 100,
+          'width': 50,
+          'height': 10,
+          'toBeBlurred': false,
+        },
+      ],
+    },
   ];
 
   /**
