@@ -67,13 +67,19 @@ async function handleImageUpload(event) {
 
     const imageFile = event.target.files[0];
 
+    // get blurring options.
+    const faceBlur = document.getElementById('face-blur').checked;
+    const plateBlur = document.getElementById('plate-blur').checked;
+    const logoBlur = document.getElementById('logo-blur').checked;
+
     const image = await getImageObjectWithNoBlurAreas(imageFile);
 
     // put original image on page.
     const inputCanvas = document.getElementById('input-canvas');
     drawImageOnCanvas(image.object, inputCanvas);
 
-    image.blurAreas = await getBlurAreas(imageFile);
+    image.blurAreas = await getBlurAreas(imageFile, faceBlur,
+        plateBlur, logoBlur);
 
     processImage(image);
 

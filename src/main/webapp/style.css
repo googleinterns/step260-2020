@@ -24,7 +24,13 @@ header {
 #images-container {
   display: grid;
   grid-gap: 20px 5%;
-  grid-template-areas: "upload-button . ." "original-image arrow blurred-image" ". . range-input" ". . download-button";
+  grid-template-areas:
+    ". . blurring-options"
+    "upload-button . blurring-options"
+    ". . blurring-options"
+    "original-image arrow blurred-image"
+    ". . range-input"
+    ". . download-button";
   grid-template-columns: 45% 1fr 45%;
   justify-content: center;
   margin-top: 10px;
@@ -33,12 +39,19 @@ header {
 
 @media screen and (max-width: 992px) {
   #images-container {
-    grid-template-areas: "upload-button" "original-image" "arrow" "blurred-image" "range-input" "download-button";
+    grid-template-areas:
+      "blurring-options"
+      "upload-button"
+      "original-image"
+      "arrow"
+      "blurred-image"
+      "range-input"
+      "download-button";
     grid-template-columns: 100%;
   }
 }
 
-#upload-image {
+#upload-label {
   grid-area: upload-button;
 }
 
@@ -68,6 +81,10 @@ header {
   align-items: center;
   display: flex;
   grid-area: arrow;
+}
+
+#blurring-options {
+  grid-area: blurring-options;
 }
 
 #arrow-text {
@@ -174,4 +191,49 @@ input[type=range]::-webkit-slider-thumb {
   height: 24px;
   margin-top: -10px;
   width: 9px;
+}
+
+.blur-option {
+  -webkit-appearance: none;
+  background-color: #fbfcf3;
+  border: 3px solid #00888b;
+  box-shadow: 1px 1px 1px #042829;
+  padding: 10px;
+  border-radius: 5px;
+  display: inline-block;
+  position: relative;
+  margin: 0 12px -5px 0;
+  transition-duration: 0.2s;
+}
+
+.blur-option:checked {
+  background-color: #fbfcf3;
+  border: 3px solid #e8990b;
+  color: #99a1a7;
+}
+
+.blur-option:checked::after {
+  content: '\2714';
+  font-size: 32px;
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  color: #e8990b;
+  text-shadow: 1px 1px 1px #042829;
+}
+
+.blur-option:focus {
+  outline: none;
+}
+
+.blur-option:hover {
+  border-radius: 10px;
+}
+
+.blur-option:checked:focus {
+  outline: none;
+}
+
+.blur-option:checked:hover {
+  border-radius: 10px;
 }
