@@ -23,12 +23,12 @@ async function showUserElements() {
 
   // If the user is logged in show a History and a Logout button.
   if (currentUser.loggedIn) {
-    document.getElementById('history-login').innerHTML = 
+    document.getElementById('history-login').innerHTML =
         `<a href="/history.html">History</a> &nbsp;` +
         `<a href="${currentUser.logoutURL}">Logout</a>`;
   } else {
     // Else show a Login button.
-    document.getElementById('history-login').innerHTML = 
+    document.getElementById('history-login').innerHTML =
         `<a href="${currentUser.loginURL}">Login</a>`;
   }
 }

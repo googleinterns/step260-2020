@@ -43,7 +43,7 @@ async function loadContent() {
   const photos = await photosResponse.json();
 
   if (photos.length == 0) {
-    contentDiv.innerHTML = 
+    contentDiv.innerHTML =
         'You didn\'t upload any photo using this account yet.';
   }
 
@@ -80,7 +80,7 @@ async function loadContent() {
       object: imageObj,
       blurAreas: blurRects,
     };
-    const blurredImage = 
+    const blurredImage =
         getImageWithBlurredAreas(imageDetails, blurRadius).object;
     blurredImage.classList.add('photo');
 
