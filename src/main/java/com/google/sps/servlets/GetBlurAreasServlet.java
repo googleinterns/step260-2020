@@ -20,22 +20,30 @@ import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
+import com.google.cloud.vision.v1.AnnotateImageRequest.Builder;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
 import com.google.cloud.vision.v1.BatchAnnotateImagesResponse;
+import com.google.cloud.vision.v1.BoundingPoly;
+import com.google.cloud.vision.v1.EntityAnnotation;
 import com.google.cloud.vision.v1.FaceAnnotation;
 import com.google.cloud.vision.v1.Feature;
 import com.google.cloud.vision.v1.Image;
 import com.google.cloud.vision.v1.ImageAnnotatorClient;
+import com.google.cloud.vision.v1.LocalizedObjectAnnotation;
+import com.google.cloud.vision.v1.NormalizedVertex;
 import com.google.cloud.vision.v1.Vertex;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import javax.imageio.ImageIO;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -47,6 +55,11 @@ public class GetBlurAreasServlet extends HttpServlet {
   // Image types that are supported by our application.
   private static final ArrayList<String> supportedTypes =
       new ArrayList<>(Arrays.asList("image/jpeg", "image/png"));
+
+  // Bitmask for the features we can blur.
+  private static final Integer FACE_BLUR_MASK = 1 << 0;
+  private static final Integer PLATE_BLUR_MASK = 1 << 1;
+  private static final Integer LOGO_BLUR_MASK = 1 << 2;
 
   /**
    * This method handles the POST requests to "/get-blur-areas". Receives a BlobKey parameter which
@@ -83,7 +96,33 @@ public class GetBlurAreasServlet extends HttpServlet {
     // Get the image the user uploaded as bytes.
     byte[] imageBytes = getBlobBytes(blobKey);
 
-    ArrayList<List<Point>> blurAreas = getBlurAreas(imageBytes);
+    // Create a bitmask representing which parts of the image to blur in getBlurAreas method.
+    // Example: FACE_BLUR_MASK | LOGO_BLUR_MASK = 101 means to blur faces, logos but not plates.
+    Integer partsToBlurMask = 0;
+
+    String faceBlur = request.getParameter("face-blur");
+    String plateBlur = request.getParameter("plate-blur");
+    String logoBlur = request.getParameter("logo-blur");
+
+    // If the user checked a part to blur, add it to our bitmask.
+    if (faceBlur != null && faceBlur.equals("on")) {
+      partsToBlurMask |= FACE_BLUR_MASK;
+    }
+    if (plateBlur != null && plateBlur.equals("on")) {
+      partsToBlurMask |= PLATE_BLUR_MASK;
+    }
+    if (logoBlur != null && logoBlur.equals("on")) {
+      partsToBlurMask |= LOGO_BLUR_MASK;
+    }
+
+    ArrayList<List<Point>> blurAreas;
+    // If the user selected at least one part to blur, call getBlurAreas. Else respond with an
+    // empty list.
+    if (partsToBlurMask != 0) {
+      blurAreas = getBlurAreas(imageBytes, partsToBlurMask);
+    } else {
+      blurAreas = new ArrayList<List<Point>>();
+    }
     deleteFile(blobKey);
 
     // Convert the rectangles to JSON.
@@ -96,56 +135,94 @@ public class GetBlurAreasServlet extends HttpServlet {
   }
 
   /**
-   * Uses the Google Cloud Vision API to find faces in the image represented by the binary data
-   * stored in @param imageBytes
+   * Uses the Google Cloud Vision API to find parts to blur in the image represented by the binary
+   * data stored in @param imageBytes
    *
-   * @return an ArrayList of bounding rectangles representing faces. Rectangles are represented by a
-   *     list of points. There is no guaranteed order of the points.
+   * @return an ArrayList of bounding rectangles representing parts to blur. Rectangles are
+   *     represented by a list of points. There is no guaranteed order of the points.
    */
-  private ArrayList<List<Point>> getBlurAreas(byte[] imageBytes) throws IOException {
+  private ArrayList<List<Point>> getBlurAreas(byte[] imageBytes, Integer partsToBlurMask)
+      throws IOException {
     // This is the array that we will return.
-    ArrayList<List<Point>> faceBorders = new ArrayList<>();
+    ArrayList<List<Point>> rectanglesToBlur = new ArrayList<>();
 
     // Convert bytes to an Image object.
     ByteString byteString = ByteString.copyFrom(imageBytes);
     Image image = Image.newBuilder().setContent(byteString).build();
 
-    // Create a face detection request to our image.
-    Feature feature = Feature.newBuilder().setType(Feature.Type.FACE_DETECTION).build();
-    AnnotateImageRequest request =
-        AnnotateImageRequest.newBuilder().addFeatures(feature).setImage(image).build();
+    // This will hold the image and the features we want to detect.
+    Builder requestBuilder = AnnotateImageRequest.newBuilder();
+
+    // Check which parts our bitmask contains and add the corresponding features to requestBuilder.
+    // setMaxResults(0) disables the maximum limit of features to return.
+    if ((partsToBlurMask & FACE_BLUR_MASK) != 0) {
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.FACE_DETECTION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
+    }
+    if ((partsToBlurMask & PLATE_BLUR_MASK) != 0) {
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.OBJECT_LOCALIZATION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
+    }
+    if ((partsToBlurMask & LOGO_BLUR_MASK) != 0) {
+      Feature feature =
+          Feature.newBuilder().setType(Feature.Type.LOGO_DETECTION).setMaxResults(0).build();
+      requestBuilder.addFeatures(feature);
+    }
+
+    requestBuilder.setImage(image);
 
     // Create an array of requests containing only ours to pass to the batchAnnotateImages function.
     List<AnnotateImageRequest> requests = new ArrayList<>();
-    requests.add(request);
+    requests.add(requestBuilder.build());
 
     // Annotate the image from our request. Skip if there is any internal error in the API.
     try (ImageAnnotatorClient client = ImageAnnotatorClient.create()) {
       BatchAnnotateImagesResponse response = client.batchAnnotateImages(requests);
       List<AnnotateImageResponse> responses = response.getResponsesList();
 
+      // We need this to get the width and height of the image.
+      BufferedImage bufferedImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+
       for (AnnotateImageResponse res : responses) {
-        // If there was any internal error in the Cloud Vision API, skip this response
+        // If there was any internal error in the Cloud Vision API, skip this response.
         if (res.hasError()) {
           System.out.println(res.getError());
           continue;
         }
 
-        // For each face detected create a rectangle represented by an array of points.
+        // For each face detected add a rectangle represented by an array of points.
         for (FaceAnnotation face : res.getFaceAnnotationsList()) {
-          ArrayList<Point> facePoly = new ArrayList<>();
-          for (Vertex vertex : face.getFdBoundingPoly().getVerticesList())
-            facePoly.add(new Point(vertex.getX(), vertex.getY()));
+          rectanglesToBlur.add(getPoints(face.getFdBoundingPoly()));
+        }
 
-          // Add the rectangle to our list of face rectangles.
-          faceBorders.add(facePoly);
+        // For each object detected add a rectangle represented by an array of points if it is a
+        // license plate.
+        for (LocalizedObjectAnnotation object : res.getLocalizedObjectAnnotationsList()) {
+          if (object.getName().equals("License plate")) {
+            ArrayList<Point> points = new ArrayList<>();
+            for (NormalizedVertex vertex : object.getBoundingPoly().getNormalizedVerticesList()) {
+              // Localized object bounding polys contain normalized vertices with coordinates in
+              // [0, 1] so we have to denormalize them.
+              Integer x = Math.round(vertex.getX() * bufferedImage.getWidth());
+              Integer y = Math.round(vertex.getY() * bufferedImage.getHeight());
+              points.add(new Point(x, y));
+            }
+            rectanglesToBlur.add(points);
+          }
+        }
+
+        // For each logo detected add a rectangle represented by an array of points.
+        for (EntityAnnotation logo : res.getLogoAnnotationsList()) {
+          rectanglesToBlur.add(getPoints(logo.getBoundingPoly()));
         }
       }
 
       client.close();
     }
 
-    return faceBorders;
+    return rectanglesToBlur;
   }
 
   /**
@@ -213,5 +290,13 @@ public class GetBlurAreasServlet extends HttpServlet {
   private void deleteFile(BlobKey blobKey) {
     BlobstoreService blobstoreService = BlobstoreServiceFactory.getBlobstoreService();
     blobstoreService.delete(blobKey);
+  }
+
+  /** Returns an ArrayList containing a BoundingPoly's points. */
+  private ArrayList<Point> getPoints(BoundingPoly poly) {
+    ArrayList<Point> points = new ArrayList<>();
+    for (Vertex vertex : poly.getVerticesList())
+      points.add(new Point(vertex.getX(), vertex.getY()));
+    return points;
   }
 }

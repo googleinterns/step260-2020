@@ -26,7 +26,18 @@
 <header>Blurer</header>
 <section id="images-container">
   <input type="file" id="upload-image"/>
-  <label for="upload-image" class="button">Upload</label>
+  <label for="upload-image" id="upload-label" class="button">Upload</label>
+  <div id="blurring-options">
+    <p>
+      <input type="checkbox" id="face-blur" class="blur-option"/> Blur faces
+    </p>
+    <p>
+      <input type="checkbox" id="plate-blur" class="blur-option"/> Blur car plates
+    </p>
+    <p>
+      <input type="checkbox" id="logo-blur" class="blur-option"/> Blur company logos
+    </p>
+  </div>
   <canvas id="input-canvas" class="image"></canvas>
   <div id="arrow">
     <i class="material-icons" id="arrow-text">arrow_right_alt</i>
@@ -44,19 +55,27 @@
   <h1>How does it work?</h1>
   <p>
     <strong class="list-mark">1.</strong>
-    Upload your image.
+    Choose which parts of the picture you would like to blur.
   </p>
   <p>
     <strong class="list-mark">2.</strong>
+    Upload your image.
+  </p>
+  <p>
+    <strong class="list-mark">3.</strong>
     Choose the best blur amount using the scroll bar. See the current result on
     the image above.
   </p>
   <p>
     <strong class="list-mark">3.</strong>
-    Download image with blurred faces.
+    If you want to make some blurred area visible (e.g. to blur all your friends in the photo, but not yourself), simply click on that area in preview image.
   </p>
   <p>
     <strong class="list-mark">4.</strong>
+    Download image with blurred faces.
+  </p>
+  <p>
+    <strong class="list-mark">5.</strong>
     Use your photo anywhere and remain anonymous!
   </p>
 </section>
