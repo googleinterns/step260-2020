@@ -12,13 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-describe('blurring method', function() {
+describe('filling method', function() {
   const testCases = [
     {
       'description': 'jpg image',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test1.png',
-      'blurRadius': 10,
+      'expectedImageUrl': 'filled/test1.png',
       'rects': [
         {
           'leftX': 0,
@@ -39,8 +38,7 @@ describe('blurring method', function() {
     {
       'description': 'png image',
       'inputImageUrl': 'test-files/537kb.png',
-      'expectedImageUrl': 'blurred/test2.png',
-      'blurRadius': 10,
+      'expectedImageUrl': 'filled/test2.png',
       'rects': [
         {
           'leftX': 0,
@@ -61,8 +59,7 @@ describe('blurring method', function() {
     {
       'description': 'intersecting rectangles',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test3.png',
-      'blurRadius': 10,
+      'expectedImageUrl': 'filled/test3.png',
       'rects': [
         {
           'leftX': 100,
@@ -83,8 +80,7 @@ describe('blurring method', function() {
     {
       'description': 'one big rectangle',
       'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test4.png',
-      'blurRadius': 15,
+      'expectedImageUrl': 'filled/test4.png',
       'rects': [
         {
           'leftX': 0,
@@ -92,50 +88,6 @@ describe('blurring method', function() {
           'width': 615,
           'height': 370,
           'toBeBlurred': true,
-        },
-      ],
-    },
-    {
-      'description': 'no blur',
-      'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test5.png',
-      'blurRadius': 0,
-      'rects': [
-        {
-          'leftX': 0,
-          'topY': 0,
-          'width': 100,
-          'height': 100,
-          'toBeBlurred': true,
-        },
-        {
-          'leftX': 100,
-          'topY': 100,
-          'width': 50,
-          'height': 10,
-          'toBeBlurred': true,
-        },
-      ],
-    },
-    {
-      'description': 'one rect not blurred',
-      'inputImageUrl': 'test-files/64kb.jpg',
-      'expectedImageUrl': 'blurred/test6.png',
-      'blurRadius': 10,
-      'rects': [
-        {
-          'leftX': 0,
-          'topY': 0,
-          'width': 100,
-          'height': 100,
-          'toBeBlurred': true,
-        },
-        {
-          'leftX': 100,
-          'topY': 100,
-          'width': 50,
-          'height': 10,
-          'toBeBlurred': false,
         },
       ],
     },
@@ -148,16 +100,20 @@ describe('blurring method', function() {
   function makeTest(testCase) {
     it(testCase.description, function() {
       return new Promise(async function(resolve, reject) {
+        // get ImageObject object to pass to getImageWithFilledAreas
+        // function as parameter
         const inputImage = new ImageObject(testCase.inputImageUrl,
             await getImageFromPath(testCase.inputImageUrl), 'somename',
             'sometype', testCase.rects);
-        const expectedImage = await getFileBlob(testCase.expectedImageUrl);
-        const blurRadius = testCase.blurRadius;
 
-        getImageWithBlurredAreas(inputImage, blurRadius).object.toBlob(
-            async function(blurredImage) {
+        // get Blob to compare with the output of
+        // getImageWithFilledAreas function
+        const expectedImage = await getFileBlob(testCase.expectedImageUrl);
+
+        getImageWithFilledAreas(inputImage).object.toBlob(
+            async function(filledImage) {
               resemble(expectedImage)
-                  .compareTo(blurredImage)
+                  .compareTo(filledImage)
                   .onComplete(function(data) {
                     // expected and blurred images must be 100% equal.
                     expect((parseInt(data.misMatchPercentage))).to.equal(0);

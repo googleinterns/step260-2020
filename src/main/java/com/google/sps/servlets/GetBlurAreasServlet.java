@@ -124,7 +124,14 @@ public class GetBlurAreasServlet extends HttpServlet {
       partsToBlurMask |= LOGO_BLUR_MASK;
     }
 
-    ArrayList<List<Point>> blurAreas = getBlurAreas(imageBytes, partsToBlurMask);
+    ArrayList<List<Point>> blurAreas;
+    // If the user selected at least one part to blur, call getBlurAreas. Else respond with an
+    // empty list.
+    if (partsToBlurMask != 0) {
+      blurAreas = getBlurAreas(imageBytes, partsToBlurMask);
+    } else {
+      blurAreas = new ArrayList<List<Point>>();
+    }
 
     // If the user is logged in, we will save the photo in our database.
     User user = User.getCurrentUser();
