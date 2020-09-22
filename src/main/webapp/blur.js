@@ -50,6 +50,10 @@ function getImageWithFilledAreas(image) {
   resultCtx.fillStyle = getAverageColor(image.object);
 
   for (const rect of image.blurAreas) {
+    if (!rect.toBeBlurred) {
+      continue;
+    }
+
     resultCtx.fillRect(rect.leftX, rect.topY, rect.width, rect.height);
   }
 
@@ -102,6 +106,10 @@ function getImageWithBlurredAreas(image, blurRadius) {
 
   // Delete areas to blur from this canvas.
   for (const rect of image.blurAreas) {
+    if (!rect.toBeBlurred) {
+      continue;
+    }
+
     withoutBlurAreasCtx.fillRect(
         rect.leftX, rect.topY, rect.width, rect.height);
   }
