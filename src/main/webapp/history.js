@@ -28,7 +28,13 @@ async function loadContent() {
   let currentUser = await getCurrentUser();
 
   // If the user is not logged in show a login URL.
-  if (!currentUser.loggedIn) {
+  if (currentUser.loggedIn) {
+    document.getElementById('history-login').innerHTML = `<a href="/history.html">History</a> &nbsp;
+        <a href="${currentUser.logoutURL}">Logout</a>`;
+  }
+  // Else show the History button.
+  else {
+    document.getElementById('history-login').innerHTML = `<a href="${currentUser.loginURL}">Login</a>`;
     contentDiv.innerHTML = `You need to <a ` +
         `href=${currentUser.loginURL}>login</a> to view your history.`;
     return;
@@ -39,6 +45,10 @@ async function loadContent() {
   // Display the photos.
   const photosResponse = await fetch('/photos');
   const photos = await photosResponse.json();
+
+  if (photos.length == 0) {
+    contentDiv.innerHTML = "You didn't upload any photo using this account yet."
+  }
 
   for (const photo of photos) {
     // This will contain both the image and the delete button.
@@ -69,9 +79,13 @@ async function loadContent() {
 
     // Blur the image with the default blur radius.
     const blurRadius = getDefaultBlurRadius(blurRects);
-    const blurredImage = getImageWithBlurredAreas(
-        blurRects, imageObj, blurRadius);
+    const imageDetails = {
+      object: imageObj,
+      blurAreas: blurRects,
+    }
+    const blurredImage = getImageWithBlurredAreas(imageDetails, blurRadius).object;
     blurredImage.classList.add('photo');
+
     // Add the image to our container.
     container.appendChild(blurredImage);
 
