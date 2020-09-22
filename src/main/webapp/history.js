@@ -45,6 +45,7 @@ async function loadContent() {
   if (photos.length == 0) {
     contentDiv.innerHTML =
         'You didn\'t upload any photo using this account yet.';
+    return;
   }
 
   for (const photo of photos) {
