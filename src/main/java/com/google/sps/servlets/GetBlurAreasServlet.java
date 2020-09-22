@@ -19,6 +19,9 @@ import com.google.appengine.api.blobstore.BlobInfoFactory;
 import com.google.appengine.api.blobstore.BlobKey;
 import com.google.appengine.api.blobstore.BlobstoreService;
 import com.google.appengine.api.blobstore.BlobstoreServiceFactory;
+import com.google.appengine.api.datastore.DatastoreService;
+import com.google.appengine.api.datastore.DatastoreServiceFactory;
+import com.google.appengine.api.datastore.Entity;
 import com.google.cloud.vision.v1.AnnotateImageRequest;
 import com.google.cloud.vision.v1.AnnotateImageRequest.Builder;
 import com.google.cloud.vision.v1.AnnotateImageResponse;
@@ -34,6 +37,8 @@ import com.google.cloud.vision.v1.NormalizedVertex;
 import com.google.cloud.vision.v1.Vertex;
 import com.google.gson.Gson;
 import com.google.protobuf.ByteString;
+import com.google.sps.data.LoggedUser;
+import com.google.sps.data.User;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -41,6 +46,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import javax.imageio.ImageIO;
@@ -93,6 +99,9 @@ public class GetBlurAreasServlet extends HttpServlet {
       return;
     }
 
+    // We need this to convert Java objects to JSON strings.
+    Gson gson = new Gson();
+
     // Get the image the user uploaded as bytes.
     byte[] imageBytes = getBlobBytes(blobKey);
 
@@ -123,10 +132,39 @@ public class GetBlurAreasServlet extends HttpServlet {
     } else {
       blurAreas = new ArrayList<List<Point>>();
     }
-    deleteFile(blobKey);
+
+    // If the user is logged in, we will save the photo in our database.
+    User user = User.getCurrentUser();
+    if (user.isLoggedIn()) {
+      LoggedUser loggedUser = (LoggedUser) user;
+
+      // Total storage space used by the user, including the new uploaded photo.
+      long totalSpace = loggedUser.getUsedSpace() + blobInfo.getSize();
+
+      // If the total space doesn't exceed the limit, store the photo in database. If it exceeds, we
+      // simply ignore it for now.
+      if (totalSpace <= LoggedUser.USER_STORAGE_LIMIT) {
+        // Create the imageEntity.
+        Entity imageEntity = new Entity("BlurImage");
+        imageEntity.setProperty("userId", loggedUser.getId());
+        imageEntity.setProperty("blobKey", blobKey);
+        imageEntity.setProperty("jsonBlurRectangles", gson.toJson(blurAreas));
+        // new Date() returns the current date object.
+        imageEntity.setProperty("dateCreated", new Date());
+
+        // Save imageEntity in datastore.
+        DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
+        datastore.put(imageEntity);
+
+        loggedUser.setUsedSpace(totalSpace);
+      }
+    }
+    // If the user is not logged in, we delete the photo.
+    else {
+      deleteFile(blobKey);
+    }
 
     // Convert the rectangles to JSON.
-    Gson gson = new Gson();
     String jsonResponse = gson.toJson(blurAreas);
 
     // Send the JSON back as the response.

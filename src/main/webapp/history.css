@@ -1,0 +1,27 @@
+#photos {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.photo-container {
+  max-width: 28vw;
+  max-height: 30vh;
+  padding: 2vw;
+}
+
+.photo {
+  display: block;
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.photo-delete {
+  position: relative;
+  display: block;
+  width: 25%;
+  min-width: 70px;
+  left: 37.5%;
+  margin-top: 1vh;
+}
