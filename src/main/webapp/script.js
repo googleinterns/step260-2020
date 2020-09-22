@@ -20,6 +20,19 @@
  * Put sample image on canvases on page.
  */
 document.addEventListener('DOMContentLoaded', async () => {
+  const userResponse = await fetch('/user');
+  let currentUser = await userResponse.json();
+
+  // If the user is logged in show a a History and a Logout button.
+  if (currentUser.loggedIn) {
+    document.getElementById('history-login').innerHTML = `<a href="/history.html">History</a> &nbsp;
+        <a href="${currentUser.logoutURL}">Logout</a>`;
+  }
+  // Else show the Login button.
+  else {
+    document.getElementById('history-login').innerHTML = `<a href="${currentUser.loginURL}">Login</a>`;
+  }
+
   const sampleImage = new ImageObject('images/sample-image.jpeg',
       await getImageFromUrl('images/sample-image.jpeg'),
       'sample-image.jpeg', 'image/jpeg', [
@@ -38,24 +51,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   processImage(sampleImage);
 });
-
-/**
- * Constructor for image object.
- * @param {String} imageUrl
- * @param {Image|HTMLCanvasElement}imageObject
- * @param {String} imageFileName
- * @param {String} imageType
- * @param {Array<Rect>} blurAreas
- * @constructor
- */
-function ImageObject(imageUrl, imageObject, imageFileName,
-    imageType, blurAreas) {
-  this.url = imageUrl;
-  this.object = imageObject;
-  this.fileName = imageFileName;
-  this.type = imageType;
-  this.blurAreas = blurAreas;
-}
 
 /**
  * Function which is called when user chooses file to upload.

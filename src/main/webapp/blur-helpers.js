@@ -180,3 +180,21 @@ function Rect(rect, image) {
         `image height`);
   }
 }
+
+/**
+ * Constructor for image object.
+ * @param {String} imageUrl
+ * @param {Image|HTMLCanvasElement} imageObject
+ * @param {String} imageFileName
+ * @param {String} imageType
+ * @param {Array<Rect>} blurAreas
+ * @constructor
+ */
+function ImageObject(imageUrl, imageObject, imageFileName,
+  imageType, blurAreas) {
+this.url = imageUrl;
+this.object = imageObject;
+this.fileName = imageFileName;
+this.type = imageType;
+this.blurAreas = blurAreas;
+}
