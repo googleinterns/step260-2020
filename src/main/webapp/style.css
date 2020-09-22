@@ -14,24 +14,25 @@ header {
   margin: 0;
   padding: 10px 7%;
   text-align: left;
-  text-decoration:none;
+  text-decoration: none;
 }
 
 #title {
-    color: #fff;
-    text-decoration:none;
+  color: #fff;
+  text-decoration: none;
 }
 
 #history-login {
-    float: right;
+  float: right;
 }
 
 #history-login > a {
-    color: #fff;
-    text-decoration:none;
+  color: #fff;
+  text-decoration: none;
 }
 
-#title:hover, #history-login > a:hover {
+#title:hover,
+#history-login > a:hover {
   color: #e8990b;
 }
 
