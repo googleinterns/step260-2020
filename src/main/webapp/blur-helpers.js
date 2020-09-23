@@ -311,11 +311,11 @@ async function preloadPhotos() {
  * Helper function that uses the Knapsack algorithm to decide which of the
  * photos to cache to maximize the sum of their values and not exceed the
  * CACHE_SIZE storage space. Each photo has a value and a sizeInKB variable.
- * @param {Array<photo>} photos 
+ * @param {Array<photo>} photos
  * @return {Array<photo>}
  */
 async function getPhotosToSave(photos) {
-  const CACHE_SIZE = Math.floor(0.4 * 1024)
+  const CACHE_SIZE = Math.floor(0.4 * 1024);
   // dp[i][j] = maximum value that can be achieved using only
   // some of the first i photos and exactly j KB
   const dp = new Array(photos.length);
