@@ -22,20 +22,6 @@
 'use strict';
 
 /**
- * Function to create canvas with width and height
- * of an image.
- * @param {Image} image
- * @return {HTMLCanvasElement}
- */
-function createCanvasForImage(image) {
-  const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
-
-  return canvas;
-}
-
-/**
  * Function to get image with some areas filled
  * with an average color of an image.
  * @param {ImageObject} image Initial image.
