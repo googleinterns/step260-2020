@@ -48,6 +48,22 @@ function getAverageRectsArea(rects) {
 }
 
 /**
+ * Helper function to get average rect side size
+ * of rects to blur.
+ * @param {Array<Rect>} rects
+ * @return {Number} average rect size.
+ */
+function getAverageRectSide(rects) {
+  let totalSide = 0;
+
+  for (const rect of rects) {
+    totalSide += rect.width + rect.height;
+  }
+
+  return totalSide / (rects.length * 2);
+}
+
+/**
  * Helper function to get image object from url
  * pointing to that image.
  * @param {String} url
@@ -65,7 +81,8 @@ function getImageFromUrl(url) {
 }
 
 /**
- * Helper function to get the default blurRadius for blurAreas.
+ * Helper function to get the default blurRadius for blurAreas
+ * if using canvases.
  * @param {Array<Rect>} blurAreas
  * @return {Number} default blur Radius.
  */
@@ -75,6 +92,26 @@ function getDefaultBlurRadius(blurAreas) {
 
   return Math.ceil(getAverageRectsArea(blurAreas) /
       SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
+}
+
+/**
+ * Helper function to get the default blurRadius for blurAreas
+ * if using our own blurring implementation.
+ * @param {Array<Rect>} blurAreas
+ * @return {Number} default blur Radius.
+ */
+function getDefaultBlurRadiusForOurAlgorithm(blurAreas) {
+  const SAMPLE_AREA_SIDE_SIZE = 50;
+  const SAMPLE_BEST_BLUR_RADIUS = 25;
+
+  // if blur radius gets too big, blurring takes
+  // enormous amount of time.
+  const MAX_BLUR_RADIUS = 31;
+
+  return Math.min(
+      Math.ceil(getAverageRectSide(blurAreas) /
+          SAMPLE_AREA_SIDE_SIZE * SAMPLE_BEST_BLUR_RADIUS),
+      MAX_BLUR_RADIUS);
 }
 
 /**
@@ -124,7 +161,7 @@ function Rect(rect, image) {
   for (const point of rect) {
     if (!point.hasOwnProperty('x')) {
       throw new Error(`Point ${JSON.stringify(point)} ` +
-      `does not have "x" property`);
+          `does not have "x" property`);
     }
     if (!point.hasOwnProperty('y')) {
       throw new Error(`Point ${JSON.stringify(point)} ` +
@@ -205,7 +242,7 @@ function Rect(rect, image) {
  * @constructor
  */
 function ImageObject(imageUrl, imageObject, imageFileName,
-    imageType, blurAreas) {
+                     imageType, blurAreas) {
   this.url = imageUrl;
   this.object = imageObject;
   this.fileName = imageFileName;
