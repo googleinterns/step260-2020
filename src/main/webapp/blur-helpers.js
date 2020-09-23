@@ -226,7 +226,7 @@ async function loadBlurredPhoto(photo) {
     const imageObject = {
       object: await getImageFromUrl(imageUrl),
       url: imageUrl,
-    }
+    };
     return imageObject;
   }
 
@@ -245,7 +245,7 @@ async function loadBlurredPhoto(photo) {
     } catch (error) {
       // If rect is invalid, log and ignore it.
       console.log('Invalid rectangle : ' + error.message,
-        area);
+          area);
       continue;
     }
     blurRects.push(rect);
@@ -260,7 +260,7 @@ async function loadBlurredPhoto(photo) {
   return getImageWithBlurredAreas(imageDetails, blurRadius);
 }
 
-/** 
+/**
  * Function that preloads some of the photos in sessionStorage.
  * Assigns each photo a value and uses the Knapsack algorithm to decide which
  * photos to load in maximum CACHE_SIZE space so that the sum of their value is
@@ -288,7 +288,7 @@ async function preloadPhotos() {
 
   // dp[i][j] = maximum value that can be achieved using only
   // some of the first i photos and exactly j KB
-  let dp = new Array(photos.length);
+  const dp = new Array(photos.length);
 
   for (let i = 0; i < photos.length; ++i) {
     dp[i] = new Array(CACHE_SIZE);
@@ -325,7 +325,8 @@ async function preloadPhotos() {
   }
 
   // Find out what is the maximum value we can obtain and for which size.
-  let maxValue = 0, maxValueSize = 0;
+  let maxValue = 0;
+  let maxValueSize = 0;
   for (let size = 0; size <= CACHE_SIZE; ++size) {
     if (dp[photos.length-1][size] > maxValue) {
       maxValue = dp[photos.length - 1][size];
@@ -334,7 +335,8 @@ async function preloadPhotos() {
   }
 
   // Find out which photos we used to get this maximum value.
-  let photosToSave = [], sizeLeft = maxValueSize;
+  const photosToSave = [];
+  let sizeLeft = maxValueSize;
   for (let i = photos.length - 1; i >= 1; --i) {
     // If the value is greater than the previous one, it means we used
     // the ith photo.
@@ -343,7 +345,7 @@ async function preloadPhotos() {
       const photoToSave = {
         serialized: (await loadBlurredPhoto(photos[i])).url,
         id: photos[i].id,
-      }
+      };
       photosToSave.push(photoToSave);
       sizeLeft -= photos[i].sizeInKB;
     }
@@ -354,7 +356,7 @@ async function preloadPhotos() {
     const photoToSave = {
       serialized: (await loadBlurredPhoto(photos[0])).url,
       id: photos[0].id,
-    }
+    };
     photosToSave.push(photoToSave);
   }
 

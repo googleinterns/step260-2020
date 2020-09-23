@@ -27,8 +27,8 @@ import javax.servlet.http.HttpServletResponse;
 public class ServerTimeServlet extends HttpServlet {
 
   /**
-   * Method that handles the GET requests to "/server-time" path. Returns a Date object, meaning
-   * the current server time.
+   * Method that handles the GET requests to "/server-time" path. Returns a Date object, meaning the
+   * current server time.
    */
   @Override
   public void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {

@@ -53,6 +53,10 @@ async function loadContent() {
   }
 }
 
+/** 
+ * Function that displays a photo on the page.
+ * @param {Image} photo
+ */
 async function displayPhoto(photo) {
   const contentDiv = document.getElementById('photos');
 
