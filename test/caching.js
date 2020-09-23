@@ -15,14 +15,14 @@
 describe('getPhotosToSave()', () => {
   loadBlurredPhoto = async (photo) => {
     const testObject = {
-      url: "test",
+      url: 'test',
     };
     return testObject;
-  }
+  };
 
   /**
-   * @param {Array<photo>} arr1 
-   * @param {Array<photo>} arr2 
+   * @param {Array<photo>} arr1
+   * @param {Array<photo>} arr2
    * @return {Boolean}
    */
   function areArraysOfPhotosEqual(arr1, arr2) {
@@ -30,7 +30,7 @@ describe('getPhotosToSave()', () => {
       return false;
     }
     for (let i = 0; i < arr1.length; ++i) {
-      if(arr1[i].id !== arr2[i].id) {
+      if (arr1[i].id !== arr2[i].id) {
         return false;
       }
     }
