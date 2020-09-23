@@ -15,7 +15,7 @@
 // suppress linter error - functions are used in another file.
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern":
-"getImageFromUrl|getDefaultBlurRadius|" }] */
+"getImageFromUrl|getDefaultBlurRadius|preloadPhotos|" }] */
 
 /**
  * Function to create canvas with width and height
@@ -258,4 +258,109 @@ async function loadBlurredPhoto(photo) {
     blurAreas: blurRects,
   };
   return getImageWithBlurredAreas(imageDetails, blurRadius);
+}
+
+/** 
+ * Function that preloads some of the photos in sessionStorage.
+ * Assigns each photo a value and uses the Knapsack algorithm to decide which
+ * photos to load in maximum CACHE_SIZE space so that the sum of their value is
+ * the biggest.
+*/
+async function preloadPhotos() {
+  const CACHE_SIZE = Math.floor(0.4 * 1024);
+
+  // Fetch photos information from the server.
+  const photosResponse = await fetch('/photos');
+  const photos = await photosResponse.json();
+
+  if (photos.length === 0) {
+    return;
+  }
+
+  // Assign each photo a value.
+  const serverTimeResponse = await fetch('server-time');
+  const currentDate = Date.parse(await serverTimeResponse.text());
+  for (const photo of photos) {
+    // We divide by 1000 to convert from miliseconds to seconds.
+    const secondsOld = (currentDate - Date.parse(photo.dateCreated)) / 1000;
+    photo.value = 1 / secondsOld;
+  }
+
+  // dp[i][j] = maximum value that can be achieved using only
+  // some of the first i photos and exactly j KB
+  let dp = new Array(photos.length);
+
+  for (let i = 0; i < photos.length; ++i) {
+    dp[i] = new Array(CACHE_SIZE);
+    for (let size = 0; size <= CACHE_SIZE; ++size) {
+      // Value achieved if we don't use ith photo.
+      let oldValue;
+      if (i === 0) {
+        oldValue = 0;
+      } else {
+        oldValue = dp[i-1][size];
+      }
+
+      // If the size we are considering is bigger than ith photo,
+      // we can consider to use it.
+      if (size >= photos[i].sizeInKB) {
+        // Value achieved if we use ith photo.
+        let newValue;
+        if (i === 0) {
+          newValue = photos[i].value;
+        } else {
+          newValue = dp[i-1][size - photos[i].sizeInKB] + photos[i].value;
+        }
+
+        // Find out which value is bigger.
+        if (newValue > oldValue) {
+          dp[i][size] = newValue;
+        } else {
+          dp[i][size] = oldValue;
+        }
+      } else {
+        dp[i][size] = oldValue;
+      }
+    }
+  }
+
+  // Find out what is the maximum value we can obtain and for which size.
+  let maxValue = 0, maxValueSize = 0;
+  for (let size = 0; size <= CACHE_SIZE; ++size) {
+    if (dp[photos.length-1][size] > maxValue) {
+      maxValue = dp[photos.length - 1][size];
+      maxValueSize = size;
+    }
+  }
+
+  // Find out which photos we used to get this maximum value.
+  let photosToSave = [], sizeLeft = maxValueSize;
+  for (let i = photos.length - 1; i >= 1; --i) {
+    // If the value is greater than the previous one, it means we used
+    // the ith photo.
+    if (dp[i][sizeLeft] > dp[i-1][sizeLeft]) {
+      // Add the photo to our array.
+      const photoToSave = {
+        serialized: (await loadBlurredPhoto(photos[i])).url,
+        id: photos[i].id,
+      }
+      photosToSave.push(photoToSave);
+      sizeLeft -= photos[i].sizeInKB;
+    }
+  }
+  // We have to consider separately this case because their is no previous
+  // value.
+  if (dp[0][sizeLeft] > 0) {
+    const photoToSave = {
+      serialized: (await loadBlurredPhoto(photos[0])).url,
+      id: photos[0].id,
+    }
+    photosToSave.push(photoToSave);
+  }
+
+  // Update sessionStorage with our new photos.
+  sessionStorage.clear();
+  for (const photo of photosToSave) {
+    sessionStorage.setItem(`cache-${photo.id}`, photo.serialized);
+  }
 }
