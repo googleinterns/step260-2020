@@ -18,6 +18,20 @@
 "getImageFromUrl|getDefaultBlurRadius|" }] */
 
 /**
+ * Function to create canvas with width and height
+ * of an image.
+ * @param {Image} image
+ * @return {HTMLCanvasElement}
+ */
+function createCanvasForImage(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  return canvas;
+}
+
+/**
  * Helper function to get average rect size of
  * rects to blur.
  * @param {Array<Rect>} rects
