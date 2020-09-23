@@ -15,6 +15,8 @@
 'use strict';
 
 document.addEventListener('DOMContentLoaded', async () => {
+  // Show the user elements depending on their login status.
+  showUserElements();
   await loadContent();
 });
 
@@ -25,9 +27,9 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function loadContent() {
   const contentDiv = document.getElementById('photos');
-  let currentUser = await getCurrentUser();
+  const currentUser = await getCurrentUser();
 
-  // If the user is not logged in show a login URL.
+  // If the user is not logged in show a message instead of the photos.
   if (!currentUser.loggedIn) {
     contentDiv.innerHTML = `You need to <a ` +
         `href=${currentUser.loginURL}>login</a> to view your history.`;
@@ -39,6 +41,12 @@ async function loadContent() {
   // Display the photos.
   const photosResponse = await fetch('/photos');
   const photos = await photosResponse.json();
+
+  if (photos.length == 0) {
+    contentDiv.innerHTML =
+        'You didn\'t upload any photo using this account yet.';
+    return;
+  }
 
   for (const photo of photos) {
     // This will contain both the image and the delete button.
@@ -69,9 +77,14 @@ async function loadContent() {
 
     // Blur the image with the default blur radius.
     const blurRadius = getDefaultBlurRadius(blurRects);
-    const blurredImage = getImageWithBlurredAreas(
-        blurRects, imageObj, blurRadius);
+    const imageDetails = {
+      object: imageObj,
+      blurAreas: blurRects,
+    };
+    const blurredImage =
+        getImageWithBlurredAreas(imageDetails, blurRadius).object;
     blurredImage.classList.add('photo');
+
     // Add the image to our container.
     container.appendChild(blurredImage);
 
@@ -131,10 +144,4 @@ function updateUsedSpace(currentUser) {
  */
 function bytesToMegabytes(bytes) {
   return Math.ceil(bytes / 1024 / 1024 * 100) / 100;
-}
-
-/** Function that returns the current user. */
-async function getCurrentUser() {
-  const userResponse = await fetch('/user');
-  return await userResponse.json();
 }

@@ -8,6 +8,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js">
   </script>
   <!--    scripts-->
+  <script src="authentication-helpers.js"></script>
+  <script src="blur-helpers.js"></script>
   <script src="script.js"></script>
   <script src="image-upload-validation.js"></script>
   <script src="get-blur-areas.js"></script>
@@ -23,7 +25,11 @@
 </head>
 
 <body>
-<header>Blurer</header>
+<header>
+  <a href="/" id="title" >Blurer</a> &nbsp;
+  <span id="history-login">
+  </span>
+</header>
 <section id="images-container">
   <input type="file" id="upload-image"/>
   <label for="upload-image" id="upload-label" class="button">Upload</label>
@@ -67,15 +73,15 @@
     the image above.
   </p>
   <p>
-    <strong class="list-mark">3.</strong>
+    <strong class="list-mark">4.</strong>
     If you want to make some blurred area visible (e.g. to blur all your friends in the photo, but not yourself), simply click on that area in preview image.
   </p>
   <p>
-    <strong class="list-mark">4.</strong>
+    <strong class="list-mark">5.</strong>
     Download image with blurred faces.
   </p>
   <p>
-    <strong class="list-mark">5.</strong>
+    <strong class="list-mark">6.</strong>
     Use your photo anywhere and remain anonymous!
   </p>
 </section>

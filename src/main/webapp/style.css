@@ -10,10 +10,30 @@ header {
   color: #fff;
   font: 32px 'Permanent Marker', cursive;
   height: 50px;
-  line-height: 50px;
+  line-height: 56px;
   margin: 0;
   padding: 10px 7%;
   text-align: left;
+  text-decoration: none;
+}
+
+#title {
+  color: #fff;
+  text-decoration: none;
+}
+
+#history-login {
+  float: right;
+}
+
+#history-login > a {
+  color: #fff;
+  text-decoration: none;
+}
+
+#title:hover,
+#history-login > a:hover {
+  color: #e8990b;
 }
 
 #how-it-works {
