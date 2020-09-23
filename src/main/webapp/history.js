@@ -53,7 +53,7 @@ async function loadContent() {
   }
 }
 
-/** 
+/**
  * Function that displays a photo on the page.
  * @param {Image} photo
  */
