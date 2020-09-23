@@ -41,22 +41,22 @@ describe('getPhotosToSave()', () => {
     const photos = [
       {
         id: 1,
-        sizeInKB: 80,
+        sizeInKiB: 80,
         value: 0.2,
       },
       {
         id: 2,
-        sizeInKB: 150,
+        sizeInKiB: 150,
         value: 0.5,
       },
       {
         id: 3,
-        sizeInKB: 210,
+        sizeInKiB: 210,
         value: 0.8,
       },
       {
         id: 4,
-        sizeInKB: 130,
+        sizeInKiB: 130,
         value: 0.3,
       },
     ];
@@ -77,22 +77,22 @@ describe('getPhotosToSave()', () => {
     const photos = [
       {
         id: 1,
-        sizeInKB: 500,
+        sizeInKiB: 500,
         value: 0.2,
       },
       {
         id: 2,
-        sizeInKB: 500,
+        sizeInKiB: 500,
         value: 0.5,
       },
       {
         id: 3,
-        sizeInKB: 500,
+        sizeInKiB: 500,
         value: 0.8,
       },
       {
         id: 4,
-        sizeInKB: 500,
+        sizeInKiB: 500,
         value: 0.3,
       },
     ];
@@ -106,22 +106,22 @@ describe('getPhotosToSave()', () => {
     const photos = [
       {
         id: 1,
-        sizeInKB: 10,
+        sizeInKiB: 10,
         value: 0.2,
       },
       {
         id: 2,
-        sizeInKB: 10,
+        sizeInKiB: 10,
         value: 0.5,
       },
       {
         id: 3,
-        sizeInKB: 10,
+        sizeInKiB: 10,
         value: 0.8,
       },
       {
         id: 4,
-        sizeInKB: 10,
+        sizeInKiB: 10,
         value: 0.3,
       },
     ];

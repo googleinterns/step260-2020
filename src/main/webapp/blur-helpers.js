@@ -277,8 +277,8 @@ async function loadBlurredPhoto(photo) {
 /**
  * Function that preloads some of the photos in sessionStorage.
  * Assigns each photo a value and uses the Knapsack algorithm to decide which
- * photos to load in maximum CACHE_SIZE space so that the sum of their value is
- * the biggest.
+ * photos to load in maximum CACHE_SIZE_KiB space so that the sum of their value
+ * is the biggest.
 */
 async function preloadPhotos() {
   // Fetch photos information from the server.
@@ -289,13 +289,14 @@ async function preloadPhotos() {
     return;
   }
 
-  // Assign each photo a value.
+  // Get current server date in miliseconds.
   const serverTimeResponse = await fetch('server-time');
   const currentDate = Date.parse(await serverTimeResponse.text());
+
+  // Assign each photo a value.
   for (const photo of photos) {
-    // We divide by 1000 to convert from miliseconds to seconds.
-    const secondsOld = (currentDate - Date.parse(photo.dateCreated)) / 1000;
-    photo.value = 1 / secondsOld;
+    const milisecondsOld = currentDate - Date.parse(photo.dateCreated);
+    photo.value = 1 / milisecondsOld;
   }
 
   const photosToSave = await getPhotosToSave(photos);
@@ -310,19 +311,20 @@ async function preloadPhotos() {
 /**
  * Helper function that uses the Knapsack algorithm to decide which of the
  * photos to cache to maximize the sum of their values and not exceed the
- * CACHE_SIZE storage space. Each photo has a value and a sizeInKB variable.
+ * CACHE_SIZE_KiB storage space.
+ * Each photo has a value and a sizeInKiB variable.
  * @param {Array<photo>} photos
  * @return {Array<photo>}
  */
 async function getPhotosToSave(photos) {
-  const CACHE_SIZE = Math.floor(0.4 * 1024);
+  const CACHE_SIZE_KiB = Math.floor(0.4 * 1024);
   // dp[i][j] = maximum value that can be achieved using only
-  // some of the first i photos and exactly j KB
+  // some of the first i photos and exactly j KiB
   const dp = new Array(photos.length);
 
   for (let i = 0; i < photos.length; ++i) {
-    dp[i] = new Array(CACHE_SIZE);
-    for (let size = 0; size <= CACHE_SIZE; ++size) {
+    dp[i] = new Array(CACHE_SIZE_KiB);
+    for (let size = 0; size <= CACHE_SIZE_KiB; ++size) {
       // Value achieved if we don't use ith photo.
       let oldValue;
       if (i === 0) {
@@ -333,21 +335,15 @@ async function getPhotosToSave(photos) {
 
       // If the size we are considering is bigger than ith photo,
       // we can consider to use it.
-      if (size >= photos[i].sizeInKB) {
+      if (size >= photos[i].sizeInKiB) {
         // Value achieved if we use ith photo.
         let newValue;
         if (i === 0) {
           newValue = photos[i].value;
         } else {
-          newValue = dp[i-1][size - photos[i].sizeInKB] + photos[i].value;
+          newValue = dp[i-1][size - photos[i].sizeInKiB] + photos[i].value;
         }
-
-        // Find out which value is bigger.
-        if (newValue > oldValue) {
-          dp[i][size] = newValue;
-        } else {
-          dp[i][size] = oldValue;
-        }
+        dp[i][size] = Math.max(oldValue, newValue);
       } else {
         dp[i][size] = oldValue;
       }
@@ -357,7 +353,7 @@ async function getPhotosToSave(photos) {
   // Find out what is the maximum value we can obtain and for which size.
   let maxValue = 0;
   let maxValueSize = 0;
-  for (let size = 0; size <= CACHE_SIZE; ++size) {
+  for (let size = 0; size <= CACHE_SIZE_KiB; ++size) {
     if (dp[photos.length-1][size] > maxValue) {
       maxValue = dp[photos.length - 1][size];
       maxValueSize = size;
@@ -377,7 +373,7 @@ async function getPhotosToSave(photos) {
         id: photos[i].id,
       };
       photosToSave.push(photoToSave);
-      sizeLeft -= photos[i].sizeInKB;
+      sizeLeft -= photos[i].sizeInKiB;
     }
   }
   // We have to consider separately this case because their is no previous
