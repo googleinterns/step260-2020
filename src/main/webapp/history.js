@@ -49,81 +49,59 @@ async function loadContent() {
   }
 
   for (const photo of photos) {
-    // This will contain both the image and the delete button.
-    const container = document.createElement('span');
-    container.classList.add('photo-container');
-
-    // Get the image from URL.
-    const imageObj =
-        await getImageFromUrl(`/photo?blob-key=${photo.blobKeyString}`);
-
-    // Convert rectangles returned by the request to Rect objects to be used
-    // by our functions.
-    const responseRects = JSON.parse(photo.jsonBlurRectangles);
-    const blurRects = [];
-    for (const area of responseRects) {
-      let rect;
-      try {
-        rect = new Rect(area, imageObj);
-      } catch (error) {
-        // If rect is invalid, log and ignore it.
-        console.log('Invalid rectangle : ' + error.message,
-            area);
-        continue;
-      }
-
-      blurRects.push(rect);
-    }
-
-    // Blur the image with the default blur radius.
-    const blurRadius = getDefaultBlurRadius(blurRects);
-    const imageDetails = {
-      object: imageObj,
-      blurAreas: blurRects,
-    };
-    const blurredImage =
-        getImageWithBlurredAreas(imageDetails, blurRadius).object;
-    blurredImage.classList.add('photo');
-
-    // Add the image to our container.
-    container.appendChild(blurredImage);
-
-    // Create the delete button and add it to the container.
-    const deleteButton = document.createElement('button');
-    deleteButton.innerHTML = 'DELETE';
-    deleteButton.classList.add('photo-delete');
-    deleteButton.onclick = () => {
-      // Make the button inactive so the user can't click it multiple times.
-      deleteButton.disable = true;
-
-      // Delete the photo from server.
-      fetch(`/photos?photo-id=${photo.id}`, {
-        method: 'DELETE',
-      }).then(async (response) => {
-        if (response.ok) {
-          // Delete the photo from page.
-          contentDiv.removeChild(container);
-
-          // Reload user to update usedSpace.
-          currentUser = await getCurrentUser();
-
-          updateUsedSpace(currentUser);
-        } else {
-          const errorMessage = await response.text();
-          const errorText = response.status + ' server error';
-
-          alert(errorText + ' : ' + errorMessage);
-
-          reject(new Error(errorText));
-          return;
-        }
-      });
-    };
-    container.appendChild(deleteButton);
-
-    // Add the container to the page.
-    contentDiv.appendChild(container);
+    displayPhoto(photo);
   }
+}
+
+async function displayPhoto(photo) {
+  const contentDiv = document.getElementById('photos');
+
+  // This will contain both the image and the delete button.
+  const container = document.createElement('span');
+  container.classList.add('photo-container');
+
+  // Load the photo.
+  const blurredImage = (await loadBlurredPhoto(photo)).object;
+  blurredImage.classList.add('photo');
+
+  // Add the image to our container.
+  container.appendChild(blurredImage);
+
+  // Create the delete button and add it to the container.
+  const deleteButton = document.createElement('button');
+  deleteButton.innerHTML = 'DELETE';
+  deleteButton.classList.add('photo-delete');
+  deleteButton.onclick = () => {
+    // Make the button inactive so the user can't click it multiple times.
+    deleteButton.disable = true;
+
+    // Delete the photo from server.
+    fetch(`/photos?photo-id=${photo.id}`, {
+      method: 'DELETE',
+    }).then(async (response) => {
+      if (response.ok) {
+        // Delete the photo from page.
+        contentDiv.removeChild(container);
+
+        // Reload user to update usedSpace.
+        const currentUser = await getCurrentUser();
+
+        updateUsedSpace(currentUser);
+      } else {
+        const errorMessage = await response.text();
+        const errorText = response.status + ' server error';
+
+        alert(errorText + ' : ' + errorMessage);
+
+        reject(new Error(errorText));
+        return;
+      }
+    });
+  };
+  container.appendChild(deleteButton);
+
+  // Add the container to the page.
+  contentDiv.appendChild(container);
 }
 
 /**
