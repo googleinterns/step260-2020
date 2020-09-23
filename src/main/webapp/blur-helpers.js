@@ -18,6 +18,20 @@
 "getImageFromUrl|getDefaultBlurRadius|" }] */
 
 /**
+ * Function to create canvas with width and height
+ * of an image.
+ * @param {Image} image
+ * @return {HTMLCanvasElement}
+ */
+function createCanvasForImage(image) {
+  const canvas = document.createElement('canvas');
+  canvas.width = image.width;
+  canvas.height = image.height;
+
+  return canvas;
+}
+
+/**
  * Helper function to get average rect size of
  * rects to blur.
  * @param {Array<Rect>} rects
@@ -197,4 +211,51 @@ function ImageObject(imageUrl, imageObject, imageFileName,
   this.fileName = imageFileName;
   this.type = imageType;
   this.blurAreas = blurAreas;
+}
+
+/**
+ * If the photo is in sessionStorage, returns it from there.
+ * Else loads it from the server and blurs it.
+ * @param {Photo} photo JSON object returned by '/photos' GET request.
+ * @return {Image}
+ */
+async function loadBlurredPhoto(photo) {
+  // If the image is in sessionStorage, we just return it from there.
+  const imageUrl = sessionStorage.getItem(`cache-${photo.id}`);
+  if (imageUrl !== null) {
+    const imageObject = {
+      object: await getImageFromUrl(imageUrl),
+      url: imageUrl,
+    };
+    return imageObject;
+  }
+
+  // Get the image from URL.
+  const imageObj =
+      await getImageFromUrl(`/photo?blob-key=${photo.blobKeyString}`);
+
+  // Convert rectangles returned by the request to Rect objects to be used
+  // by our functions.
+  const responseRects = JSON.parse(photo.jsonBlurRectangles);
+  const blurRects = [];
+  for (const area of responseRects) {
+    let rect;
+    try {
+      rect = new Rect(area, imageObj);
+    } catch (error) {
+      // If rect is invalid, log and ignore it.
+      console.log('Invalid rectangle : ' + error.message,
+          area);
+      continue;
+    }
+    blurRects.push(rect);
+  }
+
+  // Blur the image with the default blur radius and return it.
+  const blurRadius = getDefaultBlurRadius(blurRects);
+  const imageDetails = {
+    object: imageObj,
+    blurAreas: blurRects,
+  };
+  return getImageWithBlurredAreas(imageDetails, blurRadius);
 }
