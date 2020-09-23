@@ -277,7 +277,7 @@ async function loadBlurredPhoto(photo) {
 /**
  * Function that preloads some of the photos in sessionStorage.
  * Assigns each photo a value and uses the Knapsack algorithm to decide which
- * photos to load in maximum CACHE_SIZE_KiB space so that the sum of their value
+ * photos to load in maximum CACHE_SIZE_KIB space so that the sum of their value
  * is the biggest.
 */
 async function preloadPhotos() {
@@ -311,20 +311,20 @@ async function preloadPhotos() {
 /**
  * Helper function that uses the Knapsack algorithm to decide which of the
  * photos to cache to maximize the sum of their values and not exceed the
- * CACHE_SIZE_KiB storage space.
+ * CACHE_SIZE_KIB storage space.
  * Each photo has a value and a sizeInKiB variable.
  * @param {Array<photo>} photos
  * @return {Array<photo>}
  */
 async function getPhotosToSave(photos) {
-  const CACHE_SIZE_KiB = Math.floor(0.4 * 1024);
+  const CACHE_SIZE_KIB = Math.floor(0.4 * 1024);
   // dp[i][j] = maximum value that can be achieved using only
   // some of the first i photos and exactly j KiB
   const dp = new Array(photos.length);
 
   for (let i = 0; i < photos.length; ++i) {
-    dp[i] = new Array(CACHE_SIZE_KiB);
-    for (let size = 0; size <= CACHE_SIZE_KiB; ++size) {
+    dp[i] = new Array(CACHE_SIZE_KIB);
+    for (let size = 0; size <= CACHE_SIZE_KIB; ++size) {
       // Value achieved if we don't use ith photo.
       let oldValue;
       if (i === 0) {
@@ -353,7 +353,7 @@ async function getPhotosToSave(photos) {
   // Find out what is the maximum value we can obtain and for which size.
   let maxValue = 0;
   let maxValueSize = 0;
-  for (let size = 0; size <= CACHE_SIZE_KiB; ++size) {
+  for (let size = 0; size <= CACHE_SIZE_KIB; ++size) {
     if (dp[photos.length-1][size] > maxValue) {
       maxValue = dp[photos.length - 1][size];
       maxValueSize = size;
