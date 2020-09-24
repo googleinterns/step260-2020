@@ -15,7 +15,8 @@
 // suppress linter error - functions are used in another file.
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern":
-"getImageFromUrl|getDefaultBlurRadius|" }] */
+"getImageFromUrl|createCanvasForImage|
+|drawImageOnCanvas|loadBlurredPhoto|ImageObject" }] */
 
 /**
  * Function to create canvas with width and height
@@ -29,38 +30,6 @@ function createCanvasForImage(image) {
   canvas.height = image.height;
 
   return canvas;
-}
-
-/**
- * Helper function to get average rect size of
- * rects to blur.
- * @param {Array<Rect>} rects
- * @return {Number} average rect size.
- */
-function getAverageRectsArea(rects) {
-  let totalArea = 0;
-
-  for (const rect of rects) {
-    totalArea += rect.width * rect.height;
-  }
-
-  return totalArea / rects.length;
-}
-
-/**
- * Helper function to get average rect side size
- * of rects to blur.
- * @param {Array<Rect>} rects
- * @return {Number} average rect side.
- */
-function getAverageRectSide(rects) {
-  let totalSide = 0;
-
-  for (const rect of rects) {
-    totalSide += rect.width + rect.height;
-  }
-
-  return totalSide / (rects.length * 2);
 }
 
 /**
@@ -78,40 +47,6 @@ function getImageFromUrl(url) {
       resolve(image);
     };
   });
-}
-
-/**
- * Helper function to get the default blurRadius for blurAreas
- * if using canvases.
- * @param {Array<Rect>} blurAreas
- * @return {Number} default blur Radius.
- */
-function getDefaultBlurRadius(blurAreas) {
-  const SAMPLE_AREA_SIZE = 100 * 100;
-  const SAMPLE_BEST_BLUR_RADIUS = 12;
-
-  return Math.ceil(getAverageRectsArea(blurAreas) /
-      SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
-}
-
-/**
- * Helper function to get the default blurRadius for blurAreas
- * if using our own blurring implementation.
- * @param {Array<Rect>} blurAreas
- * @return {Number} default blur Radius.
- */
-function getDefaultBlurRadiusForOurAlgorithm(blurAreas) {
-  const SAMPLE_AREA_SIDE_SIZE = 50;
-  const SAMPLE_BEST_BLUR_RADIUS = 25;
-
-  // if blur radius gets too big, blurring takes
-  // enormous amount of time.
-  const MAX_BLUR_RADIUS = 31;
-
-  return Math.min(
-      Math.ceil(getAverageRectSide(blurAreas) /
-          SAMPLE_AREA_SIDE_SIZE * SAMPLE_BEST_BLUR_RADIUS),
-      MAX_BLUR_RADIUS);
 }
 
 /**
