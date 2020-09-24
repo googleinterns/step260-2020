@@ -242,7 +242,7 @@ function Rect(rect, image) {
  * @constructor
  */
 function ImageObject(imageUrl, imageObject, imageFileName,
-                     imageType, blurAreas) {
+    imageType, blurAreas) {
   this.url = imageUrl;
   this.object = imageObject;
   this.fileName = imageFileName;

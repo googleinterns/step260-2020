@@ -219,7 +219,7 @@ function Color(red, green, blue, alpha) {
  * @return {Color} color of (x, y) pixel.
  */
 function getColorForCoord(x, y, imageData,
-                          defaultColor = new Color(0, 0, 0, 0)) {
+    defaultColor = new Color(0, 0, 0, 0)) {
   const redIndex = y * (imageData.width * 4) + x * 4;
 
   if (0 <= redIndex && redIndex + 3 < imageData.data.length) {
