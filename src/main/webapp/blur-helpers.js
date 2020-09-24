@@ -16,7 +16,8 @@
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern":
 "getImageFromUrl|createCanvasForImage|
-|drawImageOnCanvas|loadBlurredPhoto|ImageObject" }] */
+|drawImageOnCanvas|loadBlurredPhoto|ImageObject|
+|preloadPhotos" }] */
 
 /**
  * Function to create canvas with width and height
@@ -230,4 +231,119 @@ async function loadBlurredPhoto(photo) {
     blurAreas: blurRects,
   };
   return getImageWithBlurredAreas(imageDetails, blurRadius);
+}
+
+/**
+ * Function that preloads some of the photos in sessionStorage.
+ * Assigns each photo a value and uses the Knapsack algorithm to decide which
+ * photos to load in maximum CACHE_SIZE_KIB space so that the sum of their value
+ * is the biggest.
+*/
+async function preloadPhotos() {
+  // Fetch photos information from the server.
+  const photosResponse = await fetch('/photos');
+  const photos = await photosResponse.json();
+
+  if (photos.length === 0) {
+    return;
+  }
+
+  // Get current server date in miliseconds.
+  const serverTimeResponse = await fetch('server-time');
+  const currentDate = Date.parse(await serverTimeResponse.text());
+
+  // Assign each photo a value.
+  for (const photo of photos) {
+    const milisecondsOld = currentDate - Date.parse(photo.dateCreated);
+    photo.value = 1 / milisecondsOld;
+  }
+
+  const photosToSave = await getPhotosToSave(photos);
+
+  // Update sessionStorage with our new photos.
+  sessionStorage.clear();
+  for (const photo of photosToSave) {
+    sessionStorage.setItem(`cache-${photo.id}`, photo.serialized);
+  }
+}
+
+/**
+ * Helper function that uses the Knapsack algorithm to decide which of the
+ * photos to cache to maximize the sum of their values and not exceed the
+ * CACHE_SIZE_KIB storage space.
+ * Each photo has a value and a sizeInKiB variable.
+ * @param {Array<photo>} photos
+ * @return {Array<photo>}
+ */
+async function getPhotosToSave(photos) {
+  const CACHE_SIZE_KIB = Math.floor(0.4 * 1024);
+  // dp[i][j] = maximum value that can be achieved using only
+  // some of the first i photos and exactly j KiB
+  const dp = new Array(photos.length);
+
+  for (let i = 0; i < photos.length; ++i) {
+    dp[i] = new Array(CACHE_SIZE_KIB);
+    for (let size = 0; size <= CACHE_SIZE_KIB; ++size) {
+      // Value achieved if we don't use ith photo.
+      let oldValue;
+      if (i === 0) {
+        oldValue = 0;
+      } else {
+        oldValue = dp[i-1][size];
+      }
+
+      // If the size we are considering is bigger than ith photo,
+      // we can consider to use it.
+      if (size >= photos[i].sizeInKiB) {
+        // Value achieved if we use ith photo.
+        let newValue;
+        if (i === 0) {
+          newValue = photos[i].value;
+        } else {
+          newValue = dp[i-1][size - photos[i].sizeInKiB] + photos[i].value;
+        }
+        dp[i][size] = Math.max(oldValue, newValue);
+      } else {
+        dp[i][size] = oldValue;
+      }
+    }
+  }
+
+  // Find out what is the maximum value we can obtain and for which size.
+  let maxValue = 0;
+  let maxValueSize = 0;
+  for (let size = 0; size <= CACHE_SIZE_KIB; ++size) {
+    if (dp[photos.length-1][size] > maxValue) {
+      maxValue = dp[photos.length - 1][size];
+      maxValueSize = size;
+    }
+  }
+
+  // Find out which photos we used to get this maximum value.
+  const photosToSave = [];
+  let sizeLeft = maxValueSize;
+  for (let i = photos.length - 1; i >= 1; --i) {
+    // If the value is greater than the previous one, it means we used
+    // the ith photo.
+    if (dp[i][sizeLeft] > dp[i-1][sizeLeft]) {
+      // Add the photo to our array.
+      const photoToSave = {
+        serialized: (await loadBlurredPhoto(photos[i])).url,
+        id: photos[i].id,
+      };
+      photosToSave.push(photoToSave);
+      sizeLeft -= photos[i].sizeInKiB;
+    }
+  }
+  // We have to consider separately this case because there is no previous
+  // value.
+  if (dp[0][sizeLeft] > 0) {
+    const photoToSave = {
+      serialized: (await loadBlurredPhoto(photos[0])).url,
+      id: photos[0].id,
+    };
+    photosToSave.push(photoToSave);
+  }
+
+  return photosToSave;
 }
