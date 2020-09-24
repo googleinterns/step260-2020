@@ -158,8 +158,9 @@ function getKernel(kernelSize) {
     kernel.push([]);
     for (let j = 0; j < kernelSize; ++j) {
       const arg = getArg(i, j);
-      kernel[i].push(f(arg));
-      normCoef += f(arg);
+      const functionValue = f(arg);
+      kernel[i].push(functionValue);
+      normCoef += functionValue;
     }
   }
 
@@ -210,6 +211,20 @@ function Color(red, green, blue, alpha) {
 }
 
 /**
+ * Colors are stored in ImageData in RGBA format in
+ * one-dimentional array. Get the index of red color
+ * of (x, y) pixel in that array. Then green color will
+ * have red + 1 index, etc.
+ * @param {Number} x
+ * @param {Number} y
+ * @param {ImageData} imageData
+ * @return {Number} index of red color in imadeData
+ */
+function getRedColorIndexForCoord(x, y, imageData) {
+  return y * (imageData.width * 4) + x * 4;
+}
+
+/**
  * Function to get Color of pixel from imageData.
  * @param {Number} x
  * @param {Number} y
@@ -220,7 +235,7 @@ function Color(red, green, blue, alpha) {
  */
 function getColorForCoord(x, y, imageData,
     defaultColor = new Color(0, 0, 0, 0)) {
-  const redIndex = y * (imageData.width * 4) + x * 4;
+  const redIndex = getRedColorIndexForCoord(x, y, imageData);
 
   if (0 <= redIndex && redIndex + 3 < imageData.data.length) {
     return new Color(imageData.data[redIndex], imageData.data[redIndex + 1],
@@ -276,11 +291,7 @@ function getBlurredData(originalData, kernel, smoothKernel, smoothSizes) {
         }
       }
 
-      // colors are stored in ImageData in RGBA format in
-      // one-dimentional array. Get the index of red color
-      // in that array. Then green color will have red + 1 index,
-      // etc.
-      const redIndex = y * (blurredData.width * 4) + x * 4;
+      const redIndex = getRedColorIndexForCoord(x, y, blurredData);
       blurredData.data[redIndex] = newColor.red;
       blurredData.data[redIndex + 1] = newColor.green;
       blurredData.data[redIndex + 2] = newColor.blue;
@@ -306,9 +317,13 @@ function getBlurredData(originalData, kernel, smoothKernel, smoothSizes) {
  */
 function getImageWithBlurredByUsAreas(image, blurRadius) {
   const kernelSize = blurRadius;
+
+  // use this matrix for blurring the rectangles.
   const kernel = getKernel(kernelSize);
 
   // the less kernelSize - the less blur will be applied.
+  // use this matrix for blurring some area around the rectangles
+  // to apply smooth edges.
   const smoothKernel = getKernel(kernelSize / 2);
 
   const originalCanvas = createCanvasForImage(image.object);
@@ -324,14 +339,23 @@ function getImageWithBlurredByUsAreas(image, blurRadius) {
       continue;
     }
 
+    // The size of the smooth edges will be width (or height)
+    // of a rect divided by this constant.
+    // The constant is an empirical number,
+    // which I think looks fine.
+    const SMOOTH_EDGES_PORTION = 7;
+
     const smoothEdgesSizes = {
-      'top': Math.min(rect.topY, rect.height / 7),
+      'top': Math.min(rect.topY, rect.height /
+          SMOOTH_EDGES_PORTION),
       'bottom': Math.min(
-          image.object.height - rect.height - rect.topY, rect.height / 7),
+          image.object.height - rect.height - rect.topY, rect.height /
+          SMOOTH_EDGES_PORTION),
       'left': Math.min(
-          rect.leftX, rect.width / 7),
+          rect.leftX, rect.width / SMOOTH_EDGES_PORTION),
       'right': Math.min(
-          image.object.width - rect.width - rect.leftX, rect.width / 7),
+          image.object.width - rect.width - rect.leftX, rect.width /
+          SMOOTH_EDGES_PORTION),
     };
 
     const originalAreaData = originalCtx.getImageData(

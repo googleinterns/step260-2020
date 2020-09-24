@@ -51,7 +51,7 @@ function getAverageRectsArea(rects) {
  * Helper function to get average rect side size
  * of rects to blur.
  * @param {Array<Rect>} rects
- * @return {Number} average rect size.
+ * @return {Number} average rect side.
  */
 function getAverageRectSide(rects) {
   let totalSide = 0;
