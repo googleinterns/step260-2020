@@ -73,7 +73,7 @@ class CanvasBlurer extends Blurer {
    * Function to get image with some areas blurred.
    * We use two canvases for this. On one canvas
    * we put blurred image. On another canvas
-   * we out not-blurred image and then delete
+   * we put not-blurred image and then delete
    * from it all the areas that we want to blur.
    * While deleting the areas, we erase not just sharp rectangles,
    * but blurred rectangles, which will look like smooth edges
@@ -240,8 +240,7 @@ class LinearFilterBlurer extends Blurer {
     for (let i = 0; i < kernelSize; ++i) {
       kernel.push([]);
       for (let j = 0; j < kernelSize; ++j) {
-        const arg = getArg(i, j);
-        const functionValue = f(arg);
+        const functionValue = f(getArg(i, j));
         kernel[i].push(functionValue);
         normCoef += functionValue;
       }
