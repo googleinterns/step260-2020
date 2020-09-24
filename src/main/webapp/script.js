@@ -62,9 +62,6 @@ document.addEventListener('DOMContentLoaded', async () => {
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // Refresh the cache.
-    preloadPhotos();
-
     freezePage();
 
     const imageFile = event.target.files[0];
@@ -86,6 +83,9 @@ async function handleImageUpload(event) {
     processImage(image);
 
     unfreezePage();
+
+    // Refresh the cache.
+    preloadPhotos();
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });

@@ -376,7 +376,7 @@ async function getPhotosToSave(photos) {
       sizeLeft -= photos[i].sizeInKiB;
     }
   }
-  // We have to consider separately this case because their is no previous
+  // We have to consider separately this case because there is no previous
   // value.
   if (dp[0][sizeLeft] > 0) {
     const photoToSave = {
