@@ -20,6 +20,20 @@
  * Put sample image on canvases on page.
  */
 document.addEventListener('DOMContentLoaded', async () => {
+  // Check if the cache is populated.
+  const isCachePopulated = false;
+  for (const key in Object.keys(sessionStorage)) {
+    if (key.startsWith('cache-')) {
+      isCachePopulated = true;
+      break;
+    }
+  }
+
+  // If the cache isn't populated, we update it.
+  if (!isCachePopulated) {
+    preloadPhotos();
+  }
+
   // Show the user elements depending on their login status.
   showUserElements();
 
@@ -69,6 +83,9 @@ async function handleImageUpload(event) {
     processImage(image);
 
     unfreezePage();
+
+    // Refresh the cache.
+    preloadPhotos();
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });
