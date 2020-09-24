@@ -15,7 +15,9 @@
 // suppress linter error - functions are used in another file.
 /* eslint no-unused-vars:
 ["error", { "varsIgnorePattern":
-"getImageFromUrl|getDefaultBlurRadius|preloadPhotos|" }] */
+"getImageFromUrl|createCanvasForImage|
+|drawImageOnCanvas|loadBlurredPhoto|ImageObject|
+|preloadPhotos" }] */
 
 /**
  * Function to create canvas with width and height
@@ -29,36 +31,6 @@ function createCanvasForImage(image) {
   canvas.height = image.height;
 
   return canvas;
-}
-
-/**
- * Function to create canvas with width and height
- * of an image.
- * @param {Image} image
- * @return {HTMLCanvasElement}
- */
-function createCanvasForImage(image) {
-  const canvas = document.createElement('canvas');
-  canvas.width = image.width;
-  canvas.height = image.height;
-
-  return canvas;
-}
-
-/**
- * Helper function to get average rect size of
- * rects to blur.
- * @param {Array<Rect>} rects
- * @return {Number} average rect size.
- */
-function getAverageRectsArea(rects) {
-  let totalArea = 0;
-
-  for (const rect of rects) {
-    totalArea += rect.width * rect.height;
-  }
-
-  return totalArea / rects.length;
 }
 
 /**
@@ -76,19 +48,6 @@ function getImageFromUrl(url) {
       resolve(image);
     };
   });
-}
-
-/**
- * Helper function to get the default blurRadius for blurAreas.
- * @param {Array<Rect>} blurAreas
- * @return {Number} default blur Radius.
- */
-function getDefaultBlurRadius(blurAreas) {
-  const SAMPLE_AREA_SIZE = 100 * 100;
-  const SAMPLE_BEST_BLUR_RADIUS = 12;
-
-  return Math.ceil(getAverageRectsArea(blurAreas) /
-      SAMPLE_AREA_SIZE * SAMPLE_BEST_BLUR_RADIUS);
 }
 
 /**
@@ -138,7 +97,7 @@ function Rect(rect, image) {
   for (const point of rect) {
     if (!point.hasOwnProperty('x')) {
       throw new Error(`Point ${JSON.stringify(point)} ` +
-      `does not have "x" property`);
+          `does not have "x" property`);
     }
     if (!point.hasOwnProperty('y')) {
       throw new Error(`Point ${JSON.stringify(point)} ` +

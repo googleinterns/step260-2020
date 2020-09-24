@@ -223,7 +223,7 @@ function updateBlurredImage(image) {
   const outputCanvas = document.getElementById('output-canvas');
   const blurRadiusInput = document.getElementById('blurring-radius');
 
-  const blurredImage = getImageWithBlurredAreas(
+  const blurredImage = (new LinearFilterBlurer).getImageWithBlurredAreas(
       image, blurRadiusInput.value);
   drawImageOnCanvas(blurredImage.object, outputCanvas);
 
@@ -258,7 +258,8 @@ function updateDownloadButton(image) {
  * @param {ImageObject} image
  */
 function updateBlurRadiusInputBar(image) {
-  const DEFAULT_VALUE = getDefaultBlurRadius(image.blurAreas);
+  const DEFAULT_VALUE = (new LinearFilterBlurer).getDefaultBlurRadius(
+      image.blurAreas);
 
   const blurRadiusInput = document.getElementById('blurring-radius');
 
