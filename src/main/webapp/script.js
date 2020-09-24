@@ -304,7 +304,8 @@ function updateBlurRadiusInputBar(image) {
 
   let DEFAULT_VALUE;
   if (useOwnAlgorithm) {
-    DEFAULT_VALUE = (new LinearFilterBlurer()).getDefaultBlurRadius(image.blurAreas);
+    DEFAULT_VALUE = (new LinearFilterBlurer()).getDefaultBlurRadius(
+        image.blurAreas);
   } else if (useCanvases) {
     DEFAULT_VALUE = (new CanvasBlurer()).getDefaultBlurRadius(image.blurAreas);
   } else {
