@@ -20,6 +20,20 @@
  * Put sample image on canvases on page.
  */
 document.addEventListener('DOMContentLoaded', async () => {
+  // Check if the cache is populated.
+  const isCachePopulated = false;
+  for (const key in Object.keys(sessionStorage)) {
+    if (key.startsWith('cache-')) {
+      isCachePopulated = true;
+      break;
+    }
+  }
+
+  // If the cache isn't populated, we update it.
+  if (!isCachePopulated) {
+    preloadPhotos();
+  }
+
   // Show the user elements depending on their login status.
   showUserElements();
 
@@ -69,6 +83,9 @@ async function handleImageUpload(event) {
     processImage(image);
 
     unfreezePage();
+
+    // Refresh the cache.
+    preloadPhotos();
   }).catch((error) => {
     alert('ERROR: ' + error.message);
   });
@@ -237,16 +254,15 @@ function updateBlurredImage(image) {
 
   let blurredImage;
   if (useOwnAlgorithm) {
-    blurredImage = getImageWithBlurredByUsAreas(
+    blurredImage = (new LinearFilterBlurer()).getImageWithBlurredAreas(
         image, blurRadiusInput.value);
   } else if (useCanvases) {
-    blurredImage = getImageWithBlurredAreas(
+    blurredImage = (new CanvasBlurer()).getImageWithBlurredAreas(
         image, blurRadiusInput.value);
   } else {
-    blurredImage = getImageWithFilledAreas(
+    blurredImage = (new Filler()).getImageWithBlurredAreas(
         image);
   }
-
 
   drawImageOnCanvas(blurredImage.object, outputCanvas);
 
@@ -288,9 +304,9 @@ function updateBlurRadiusInputBar(image) {
 
   let DEFAULT_VALUE;
   if (useOwnAlgorithm) {
-    DEFAULT_VALUE = getDefaultBlurRadiusForOurAlgorithm(image.blurAreas);
+    DEFAULT_VALUE = (new LinearFilterBlurer()).getDefaultBlurRadius(image.blurAreas);
   } else if (useCanvases) {
-    DEFAULT_VALUE = getDefaultBlurRadius(image.blurAreas);
+    DEFAULT_VALUE = (new CanvasBlurer()).getDefaultBlurRadius(image.blurAreas);
   } else {
     blurInput.classList.add('hide');
     return;

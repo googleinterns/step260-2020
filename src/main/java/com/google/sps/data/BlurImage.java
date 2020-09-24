@@ -14,6 +14,8 @@
 
 package com.google.sps.data;
 
+import com.google.appengine.api.blobstore.BlobInfo;
+import com.google.appengine.api.blobstore.BlobInfoFactory;
 import com.google.appengine.api.blobstore.BlobKey;
 import java.util.Date;
 
@@ -25,6 +27,7 @@ public final class BlurImage {
   private final String blobKeyString;
   private final String jsonBlurRectangles;
   private final Date dateCreated;
+  private final int sizeInKiB;
 
   public BlurImage(
       long id, String userId, BlobKey blobKey, String jsonBlurRectangles, Date dateCreated) {
@@ -33,6 +36,12 @@ public final class BlurImage {
     this.blobKeyString = blobKey.getKeyString();
     this.jsonBlurRectangles = jsonBlurRectangles;
     this.dateCreated = dateCreated;
+
+    BlobInfo blobInfo = new BlobInfoFactory().loadBlobInfo(blobKey);
+    // getSize() function returns the size in bytes. We divide by 1024 to
+    // convert it in KiB. We can cast it to int because it can't be bigger than
+    // 8192.
+    sizeInKiB = (int) (blobInfo.getSize() / 1024);
   }
 
   public long getId() {
@@ -53,5 +62,9 @@ public final class BlurImage {
 
   public Date dateCreated() {
     return dateCreated;
+  }
+
+  public int getSizeInKiB() {
+    return sizeInKiB;
   }
 }
