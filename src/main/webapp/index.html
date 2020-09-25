@@ -44,6 +44,17 @@
       <input type="checkbox" id="logo-blur" class="blur-option"/> Blur company logos
     </p>
   </div>
+  <div id="blurring-implementation-options">
+    <p>
+      <input type="radio" id="use-fill-areas" class="blur-implementation-option" name="blur-implementation"/> Fill with average color
+    </p>
+    <p>
+      <input type="radio" id="use-canvases" class="blur-implementation-option" name="blur-implementation" checked/> Blur using Gaussian blur algorithm
+    </p>
+    <p>
+      <input type="radio" id="use-own-algorithm" class="blur-implementation-option" name="blur-implementation"/> Blur using other algorithm
+    </p>
+  </div>
   <canvas id="input-canvas" class="image"></canvas>
   <div id="arrow">
     <i class="material-icons" id="arrow-text">arrow_right_alt</i>
@@ -65,23 +76,27 @@
   </p>
   <p>
     <strong class="list-mark">2.</strong>
-    Upload your image.
+    Choose what algorithm you want to use for that.
   </p>
   <p>
     <strong class="list-mark">3.</strong>
+    Upload your image.
+  </p>
+  <p>
+    <strong class="list-mark">4.</strong>
     Choose the best blur amount using the scroll bar. See the current result on
     the image above.
   </p>
   <p>
-    <strong class="list-mark">4.</strong>
+    <strong class="list-mark">5.</strong>
     If you want to make some blurred area visible (e.g. to blur all your friends in the photo, but not yourself), simply click on that area in preview image.
   </p>
   <p>
-    <strong class="list-mark">5.</strong>
-    Download image with blurred faces.
+    <strong class="list-mark">6.</strong>
+    Download image with blurred areas.
   </p>
   <p>
-    <strong class="list-mark">6.</strong>
+    <strong class="list-mark">7.</strong>
     Use your photo anywhere and remain anonymous!
   </p>
 </section>

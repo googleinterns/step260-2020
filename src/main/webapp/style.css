@@ -45,9 +45,8 @@ header {
   display: grid;
   grid-gap: 20px 5%;
   grid-template-areas:
-    ". . blurring-options"
-    "upload-button . blurring-options"
-    ". . blurring-options"
+    "blurring-options . blurring-implementation-options"
+    "upload-button . ."
     "original-image arrow blurred-image"
     ". . range-input"
     ". . download-button";
@@ -61,6 +60,7 @@ header {
   #images-container {
     grid-template-areas:
       "blurring-options"
+      "blurring-implementation-options"
       "upload-button"
       "original-image"
       "arrow"
@@ -105,6 +105,10 @@ header {
 
 #blurring-options {
   grid-area: blurring-options;
+}
+
+#blurring-implementation-options {
+  grid-area: blurring-implementation-options;
 }
 
 #arrow-text {
@@ -255,5 +259,52 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 .blur-option:checked:hover {
+  border-radius: 10px;
+}
+
+.blur-implementation-option {
+  -webkit-appearance: none;
+  background-color: #fbfcf3;
+  border: 3px solid #00888b;
+  box-shadow: 1px 1px 1px #042829;
+  padding: 9px;
+  border-radius: 50px;
+  display: inline-block;
+  position: relative;
+  transition-duration: 0.2s;
+}
+
+.blur-implementation-option:checked::after {
+  content: ' ';
+  width: 12px;
+  height: 12px;
+  border-radius: 50px;
+  position: absolute;
+  top: 3px;
+  background: #e8990b;
+  text-shadow: 1px 1px 1px #042829;
+  left: 3px;
+  font-size: 32px;
+}
+
+.blur-implementation-option:checked {
+  background-color: #fbfcf3;
+  border: 3px solid #e8990b;
+  color: #99a1a7;
+}
+
+.blur-implementation-option:focus {
+  outline: none;
+}
+
+.blur-implementation-option:hover {
+  border-radius: 10px;
+}
+
+.blur-implementation-option:checked:focus {
+  outline: none;
+}
+
+.blur-implementation-option:checked:hover {
   border-radius: 10px;
 }

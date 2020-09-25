@@ -161,9 +161,35 @@ async function processImage(image) {
 
   updateBlurredImage(image);
 
+  updateBlurImplementationRadioButtons(image);
+
   const outputCanvas = document.getElementById('output-canvas');
   outputCanvas.onclick = (event) => {
     toggleAreaBlur(event, image);
+  };
+}
+
+/**
+ * Function to set reblur action when user selects another
+ * blur implementation.
+ * @param {ImageObject} image
+ */
+function updateBlurImplementationRadioButtons(image) {
+  const useFillAreas = document.getElementById('use-fill-areas');
+  const useCanvases = document.getElementById('use-canvases');
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm');
+
+  useFillAreas.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
+  };
+  useCanvases.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
+  };
+  useOwnAlgorithm.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
   };
 }
 
@@ -223,8 +249,21 @@ function updateBlurredImage(image) {
   const outputCanvas = document.getElementById('output-canvas');
   const blurRadiusInput = document.getElementById('blurring-radius');
 
-  const blurredImage = (new LinearFilterBlurer).getImageWithBlurredAreas(
-      image, blurRadiusInput.value);
+  const useCanvases = document.getElementById('use-canvases').checked;
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm').checked;
+
+  let blurredImage;
+  if (useOwnAlgorithm) {
+    blurredImage = (new LinearFilterBlurer()).getImageWithBlurredAreas(
+        image, blurRadiusInput.value);
+  } else if (useCanvases) {
+    blurredImage = (new CanvasBlurer()).getImageWithBlurredAreas(
+        image, blurRadiusInput.value);
+  } else {
+    blurredImage = (new Filler()).getImageWithBlurredAreas(
+        image);
+  }
+
   drawImageOnCanvas(blurredImage.object, outputCanvas);
 
   updateDownloadButton(blurredImage);
@@ -258,8 +297,23 @@ function updateDownloadButton(image) {
  * @param {ImageObject} image
  */
 function updateBlurRadiusInputBar(image) {
-  const DEFAULT_VALUE = (new LinearFilterBlurer).getDefaultBlurRadius(
-      image.blurAreas);
+  const blurInput = document.getElementById('blur-input');
+
+  const useCanvases = document.getElementById('use-canvases').checked;
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm').checked;
+
+  let DEFAULT_VALUE;
+  if (useOwnAlgorithm) {
+    DEFAULT_VALUE = (new LinearFilterBlurer()).getDefaultBlurRadius(
+        image.blurAreas);
+  } else if (useCanvases) {
+    DEFAULT_VALUE = (new CanvasBlurer()).getDefaultBlurRadius(image.blurAreas);
+  } else {
+    blurInput.classList.add('hide');
+    return;
+  }
+
+  blurInput.classList.remove('hide');
 
   const blurRadiusInput = document.getElementById('blurring-radius');
 
