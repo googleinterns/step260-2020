@@ -62,9 +62,12 @@ function getFormUploadUrl() {
  * Function to send image to server and get response
  * with areas to blur.
  * @param {File} image
+ * @param {Boolean} faceBlur
+ * @param {Boolean} plateBlur
+ * @param {Boolean} logoBlur
  * @return {Promise<Array<Rect>>} blurAreas
  */
-function getBlurAreas(image) {
+function getBlurAreas(image, faceBlur, plateBlur, logoBlur) {
   return new Promise(async function(resolve, reject) {
     // get new blobstore upload url.
     const postUrl = await getFormUploadUrl().catch((error) => {
@@ -78,6 +81,15 @@ function getBlurAreas(image) {
     // create form
     const formData = new FormData();
     formData.append('image', image);
+    if (faceBlur) {
+      formData.append('face-blur', 'on');
+    }
+    if (plateBlur) {
+      formData.append('plate-blur', 'on');
+    }
+    if (logoBlur) {
+      formData.append('logo-blur', 'on');
+    }
 
     fetch(postUrl, {
       method: 'POST',
@@ -155,100 +167,4 @@ function getBlurAreas(image) {
         },
     );
   });
-}
-
-/**
- * Constructor for rectangle to blur.
- * Takes as parameter rectangle from server - array with 4 points,
- * point is an object with properties 'x' and 'y'.
- * Validates rectangle from server.
- * @param {Array<Object>} rect
- * @param {Image} image
- * @constructor
- */
-function Rect(rect, image) {
-  if (!Array.isArray(rect)) {
-    throw new Error('Object passed here is not an Array. ' +
-        'It must be an Array of points');
-  }
-
-  // has 4 points
-  if (rect.length !== 4) {
-    throw new Error(`Rectangle object must contain exactly 4 corner ` +
-        `points. This object has ${rect.length} points.`);
-  }
-
-  // points must have x and y properties
-  for (const point of rect) {
-    if (!point.hasOwnProperty('x')) {
-      throw new Error(`Point ${JSON.stringify(point)} ` +
-      `does not have "x" property`);
-    }
-    if (!point.hasOwnProperty('y')) {
-      throw new Error(`Point ${JSON.stringify(point)} ` +
-          `does not have "y" property`);
-    }
-  }
-
-  // points must not duplicate
-  for (let i = 0; i < 4; i++) {
-    for (let j = 0; j < i; j++) {
-      if (rect[i].x === rect[j].x && rect[i].y === rect[j].y) {
-        throw new Error(`Duplicate points : point ${i} = ` +
-            `point ${j} = (${rect[i].x}, ${rect[i].y})`);
-      }
-    }
-  }
-
-  // get leftX, rightX, topY and bottomY
-  // as min or max values
-  this.leftX = rect[0].x;
-  this.topY = rect[0].y;
-  let rightX = rect[0].x;
-  let bottomY = rect[0].y;
-
-  for (const point of rect) {
-    this.leftX = Math.min(this.leftX, point.x);
-    this.topY = Math.min(this.topY, point.y);
-    rightX = Math.max(rightX, point.x);
-    bottomY = Math.max(bottomY, point.y);
-  }
-
-  this.height = bottomY - this.topY + 1;
-  this.width = rightX - this.leftX + 1;
-
-  // all point's x and y must equal minimum or maximum of those values.
-  // if points do not duplicate, it's 'x' has 2 options - either leftX
-  // or rightX, 'y' has 2 options, and rect object has exactly 4 points,
-  // then we are sure, that this is a rectangle, parallel to x and y axes.
-  for (const point of rect) {
-    if (point.x !== this.leftX && point.x !== rightX) {
-      throw new Error(`Point's (${point.x}, ${point.y}) "x" property equals ` +
-          `${point.x} which does not equal this rect's ` +
-          `minimum (${this.leftX}) or maximum (${rightX}) "x" property => ` +
-          `this is not a rectangle with sides parallel to x and y axes`);
-    }
-    if (point.y !== this.topY && point.y !== bottomY) {
-      throw new Error(`Point's (${point.x}, ${point.y}) "y" property equals ` +
-          `${point.y} which does not equal this rect's ` +
-          `minimum (${this.topY}) or maximum (${bottomY}) "y" property => ` +
-          `this is not a rectangle with sides parallel to x and y axes`);
-    }
-  }
-
-  // rect must not have points outside the image
-  if (this.leftX < 0) {
-    throw new Error(`Has negative x point: ${this.leftX}`);
-  }
-  if (this.topY < 0) {
-    throw new Error(`Has negative y point: ${this.topY}`);
-  }
-  if (rightX > image.width) {
-    throw new Error(`Has x point (x=${rightX}) which is greater than ` +
-        `image width`);
-  }
-  if (bottomY > image.height) {
-    throw new Error(`Has y point (y=${bottomY}) which is greater than ` +
-        `image height`);
-  }
 }

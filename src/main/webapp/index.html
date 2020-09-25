@@ -8,14 +8,97 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/color-thief/2.3.0/color-thief.umd.js">
   </script>
   <!--    scripts-->
+  <script src="authentication-helpers.js"></script>
+  <script src="blur-helpers.js"></script>
   <script src="script.js"></script>
+  <script src="image-upload-validation.js"></script>
   <script src="get-blur-areas.js"></script>
+  <script src="blur-helpers.js"></script>
   <script src="blur.js"></script>
+  <!--    style-->
+  <link rel="stylesheet" href="style.css">
+  <!--    fonts-->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo&amp;family=Permanent+Marker&amp;display=swap"
+  rel="stylesheet">
+  <!--    material icons-->
+  <link href="https://fonts.googleapis.com/css2?family=Material+Icons" rel="stylesheet">
 </head>
 
 <body>
-<input type="file" id="upload-image"/>
-<div id="images-container"></div>
-</body>
+<header>
+  <a href="/" id="title" >Blurer</a> &nbsp;
+  <span id="history-login">
+  </span>
+</header>
+<section id="images-container">
+  <input type="file" id="upload-image"/>
+  <label for="upload-image" id="upload-label" class="button">Upload</label>
+  <div id="blurring-options">
+    <p>
+      <input type="checkbox" id="face-blur" class="blur-option"/> Blur faces
+    </p>
+    <p>
+      <input type="checkbox" id="plate-blur" class="blur-option"/> Blur car plates
+    </p>
+    <p>
+      <input type="checkbox" id="logo-blur" class="blur-option"/> Blur company logos
+    </p>
+  </div>
+  <div id="blurring-implementation-options">
+    <p>
+      <input type="radio" id="use-fill-areas" class="blur-implementation-option" name="blur-implementation"/> Fill with average color
+    </p>
+    <p>
+      <input type="radio" id="use-canvases" class="blur-implementation-option" name="blur-implementation" checked/> Blur using Gaussian blur algorithm
+    </p>
+    <p>
+      <input type="radio" id="use-own-algorithm" class="blur-implementation-option" name="blur-implementation"/> Blur using other algorithm
+    </p>
+  </div>
+  <canvas id="input-canvas" class="image"></canvas>
+  <div id="arrow">
+    <i class="material-icons" id="arrow-text">arrow_right_alt</i>
+  </div>
+  <canvas id="output-canvas" class="image"></canvas>
+  <div id="blur-input">
+    <label for="blurring-radius">Select blur amount:</label>
+    <br>
+    <input type="range" id="blurring-radius" min="0">
+  </div>
+  <a id="download-button" class="hide button">Download</a>
+</section>
 
+<section id="how-it-works">
+  <h1>How does it work?</h1>
+  <p>
+    <strong class="list-mark">1.</strong>
+    Choose which parts of the picture you would like to blur.
+  </p>
+  <p>
+    <strong class="list-mark">2.</strong>
+    Choose what algorithm you want to use for that.
+  </p>
+  <p>
+    <strong class="list-mark">3.</strong>
+    Upload your image.
+  </p>
+  <p>
+    <strong class="list-mark">4.</strong>
+    Choose the best blur amount using the scroll bar. See the current result on
+    the image above.
+  </p>
+  <p>
+    <strong class="list-mark">5.</strong>
+    If you want to make some blurred area visible (e.g. to blur all your friends in the photo, but not yourself), simply click on that area in preview image.
+  </p>
+  <p>
+    <strong class="list-mark">6.</strong>
+    Download image with blurred areas.
+  </p>
+  <p>
+    <strong class="list-mark">7.</strong>
+    Use your photo anywhere and remain anonymous!
+  </p>
+</section>
+</body>
 </html>

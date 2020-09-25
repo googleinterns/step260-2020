@@ -17,27 +17,43 @@
 /**
  * Function which is called when page loads.
  * Add event listener to image upload button.
- * Add canvases to the page, put sample image to them.
+ * Put sample image on canvases on page.
  */
-document.addEventListener('DOMContentLoaded', () => {
-  const CANVAS_WIDTH = 300;
+document.addEventListener('DOMContentLoaded', async () => {
+  // Check if the cache is populated.
+  const isCachePopulated = false;
+  for (const key in Object.keys(sessionStorage)) {
+    if (key.startsWith('cache-')) {
+      isCachePopulated = true;
+      break;
+    }
+  }
+
+  // If the cache isn't populated, we update it.
+  if (!isCachePopulated) {
+    preloadPhotos();
+  }
+
+  // Show the user elements depending on their login status.
+  showUserElements();
+
+  const sampleImage = new ImageObject('images/sample-image.jpeg',
+      await getImageFromUrl('images/sample-image.jpeg'),
+      'sample-image.jpeg', 'image/jpeg', [
+        {leftX: 87, topY: 405, height: 52, width: 50, toBeBlurred: true},
+        {leftX: 599, topY: 365, height: 73, width: 72, toBeBlurred: true},
+        {leftX: 460, topY: 329, height: 77, width: 76, toBeBlurred: true},
+        {leftX: 254, topY: 456, height: 48, width: 47, toBeBlurred: true},
+      ]);
 
   const uploadButton = document.getElementById('upload-image');
   uploadButton.addEventListener('change', handleImageUpload);
 
-  const imagesContainer = document.getElementById('images-container');
-
-  // put canvases into image container on html page.
-  const inputCanvas = createCanvasForId('input-canvas');
-  inputCanvas.setAttribute('width', CANVAS_WIDTH);
-  imagesContainer.append(inputCanvas);
-
-  const outputCanvas = createCanvasForId('output-canvas');
-  outputCanvas.setAttribute('width', CANVAS_WIDTH);
-  imagesContainer.append(outputCanvas);
-
   // add sample image on page - original and blurred one.
-  putSampleImagesOnPage();
+  const inputCanvas = document.getElementById('input-canvas');
+  drawImageOnCanvas(sampleImage.object, inputCanvas);
+
+  processImage(sampleImage);
 });
 
 /**
@@ -46,227 +62,266 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 async function handleImageUpload(event) {
   await validateImageUpload().then(async () => {
-    // if image is valid - put it on page (original and blurred one).
-    putImageOnPageAndBlur(event.target.files[0]);
-  }).catch((error) => {
-    // if image is not valid - display error message
-    alert(error.message);
-  });
-}
+    freezePage();
 
-/**
- * Function to validate the uploaded image.
- * If valid - returns nothing, if not - throws error.
- * @throws {Error} validation errors
- */
-async function validateImageUpload() {
-  // get FileList with all the files from input element.
-  const files = document.getElementById('upload-image').files;
+    const imageFile = event.target.files[0];
 
-  // check if no files were uploaded.
-  if (files.length === 0) {
-    throw new Error('Nothing is uploaded');
-  }
+    // get blurring options.
+    const faceBlur = document.getElementById('face-blur').checked;
+    const plateBlur = document.getElementById('plate-blur').checked;
+    const logoBlur = document.getElementById('logo-blur').checked;
 
-  // get first (and the only) file from FileList.
-  const file = files[0];
+    const image = await getImageObjectWithNoBlurAreas(imageFile);
 
-  // check whether file is jpeg or png.
-  const fileType = await getImageTypeOrError(file);
-
-  // check file size.
-  validateImageSize(file, fileType);
-
-  // Image resolution can not be more than 1920x1080.
-  await validateImageResolution(file, 1920, 1080);
-}
-
-/**
- * Function to make sure the image is not too big.
- * @param {File} image
- * @param {string} imageType Can be 'png' or 'jpeg' only.
- */
-function validateImageSize(image, imageType) {
-  // This limit comes from simple calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BYTES_PER_PIXEL_IN_PNG
-  // 1920 x 1080 x 4 ~ 8294400 bytes ~ 8 mb
-  const PNG_LIMIT_MB = 8;
-  if (imageType === 'png' && image.size > PNG_LIMIT_MB * 1024 * 1024) {
-    throw new Error(
-        `File size should not exceed ${PNG_LIMIT_MB}MB for png images.` +
-        'The size of an uploaded png image is ' +
-        Math.ceil(image.size / 1024 / 1024) + 'MB');
-  }
-
-  // This limit comes from similar calculation.
-  // MAX_RESOLUTION * AVERAGE_NUMBER_OF_BITS_PER_PIXEL_IN_JPG
-  // 1920 x 1080 x 8.25 ~ 17107200 bits ~ 2 mb
-  const JPG_LIMIT_MB = 2;
-  if (imageType === 'jpeg' && image.size > JPG_LIMIT_MB * 1024 * 1024) {
-    throw new Error(
-        `File size should not exceed ${JPG_LIMIT_MB}MB for jpeg images.` +
-        'The size of an uploaded jpeg image is ' +
-        Math.ceil(image.size / 1024 / 1024) + 'MB');
-  }
-}
-
-/**
- * Function to get file type if it is png or jpeg
- * and throw error otherwise
- * @param {File} file
- * @return {Promise}
- */
-function getImageTypeOrError(file) {
-  return new Promise(function(resolve, reject) {
-    const fileReader = new FileReader();
-
-    fileReader.onloadend = function(e) {
-      // get first 4 bytes from file - they contain information
-      // about the extension.
-      const bytes = new Uint8Array(e.target.result);
-
-      // convert those bytes to string
-      let header = '';
-      for (let i = 0; i < bytes.length; i++) {
-        header += bytes[i].toString(16);
-      }
-
-      const PNG_HEADERS = ['89504e47'];
-      if (PNG_HEADERS.includes(header)) {
-        resolve('png');
-      }
-
-      const JPEG_HEADERS = ['ffd8ffe0', 'ffd8ffe1',
-        'ffd8ffe2', 'ffd8ffe3', 'ffd8ffe8'];
-      if (JPEG_HEADERS.includes(header)) {
-        resolve('jpeg');
-      }
-
-      reject(new Error(
-          'Invalid file type. Only jpeg and png images can be uploaded'));
-    };
-
-    // read first 4 bytes from file
-    fileReader.readAsArrayBuffer(file.slice(0, 4));
-  });
-}
-
-/**
- * Function to make sure the image resolution is no
- * more than mxWidth x mxHeight
- * Promise returns error if this is not true and
- * nothing otherwise.
- * @param {File} imageFile
- * @param {Number} mxWidth
- * @param {Number} mxHeight
- * @return {Promise}
- */
-function validateImageResolution(imageFile, mxWidth, mxHeight) {
-  return new Promise(function(resolve, reject) {
-    // construct image object from the file
-    const imageObject = new Image();
-    const imageUrl = URL.createObjectURL(imageFile);
-
-    imageObject.onload = function() {
-      if (imageObject.width * imageObject.height >
-          mxWidth * mxHeight) {
-        reject(new Error(
-            'The image resolution can not exceed ' + mxWidth +
-            'x' + mxHeight + 'px. ' +
-            'The uploaded image resolution is ' +
-            imageObject.width + 'x' + imageObject.height + 'px'));
-        return;
-      }
-
-      resolve();
-    };
-
-    imageObject.src = imageUrl;
-  });
-}
-
-/**
- * Creates canvas with specified id.
- * @param {string} id
- * @return {HTMLCanvasElement} canvas DOM element
- */
-function createCanvasForId(id) {
-  const canvas = document.createElement('canvas');
-  canvas.setAttribute('id', id);
-
-  return canvas;
-}
-
-/**
- * Function to blur image and put on page
- * original and blurred images
- * @param {File} imageFile
- */
-async function putImageOnPageAndBlur(imageFile) {
-  const imageUrl = URL.createObjectURL(imageFile);
-
-  // create Image object from url to put it on canvas.
-  const imageObj = new Image();
-  imageObj.src = imageUrl;
-
-  // need to wait until image loads to put it anywhere.
-  imageObj.onload = async () => {
+    // put original image on page.
     const inputCanvas = document.getElementById('input-canvas');
-    drawImageOnCanvas(imageObj, inputCanvas);
+    drawImageOnCanvas(image.object, inputCanvas);
 
-    const blurAreas = await getBlurAreas(imageFile);
+    image.blurAreas = await getBlurAreas(imageFile, faceBlur,
+        plateBlur, logoBlur);
 
-    const blurredImage = getImageWithBlurredAreas(blurAreas, imageObj);
+    processImage(image);
 
-    const outputCanvas = document.getElementById('output-canvas');
-    drawImageOnCanvas(blurredImage, outputCanvas);
+    unfreezePage();
+
+    // Refresh the cache.
+    preloadPhotos();
+  }).catch((error) => {
+    alert('ERROR: ' + error.message);
+  });
+}
+
+/**
+ * Function to get ImageObject from uploaded file
+ * with blurAreas property set to empty.
+ * @param {File} imageFile
+ * @return {Promise<ImageObject>}
+ */
+async function getImageObjectWithNoBlurAreas(imageFile) {
+  const imageUrl = URL.createObjectURL(imageFile);
+  const imageObject = await getImageFromUrl(imageUrl);
+  const imageType = getImageTypeOrError(imageFile);
+  const fileName = imageFile.name;
+
+  return new ImageObject(imageUrl, imageObject, fileName,
+      imageType, []);
+}
+
+/**
+ * Function to disable DOM elements and tell
+ * the user that their image is being
+ * processed.
+ */
+function freezePage() {
+  const uploadButton = document.getElementById('upload-image');
+  const downloadButton = document.getElementById('download-button');
+  const outputCanvas = document.getElementById('output-canvas');
+
+  downloadButton.classList.add('hide');
+  downloadButton.disabled = true;
+  uploadButton.disabled = true;
+
+  outputCanvas.classList.add('hide');
+
+  const loadingGif = document.createElement('img');
+  loadingGif.src = 'images/loading.gif';
+  loadingGif.id = 'loading-gif';
+  outputCanvas.after(loadingGif);
+}
+
+/**
+ * Function to enable DOM elements back from freezing.
+ */
+function unfreezePage() {
+  const uploadButton = document.getElementById('upload-image');
+  const downloadButton = document.getElementById('download-button');
+  const outputCanvas = document.getElementById('output-canvas');
+
+  downloadButton.classList.remove('hide');
+  downloadButton.disabled = false;
+  uploadButton.disabled = false;
+
+  outputCanvas.classList.remove('hide');
+
+  const loadingGif = document.getElementById('loading-gif');
+  loadingGif.remove();
+}
+
+/**
+ * Updates the page with new uploaded image.
+ * It calls blurring method, puts new and blurred
+ * images on canvases, updates blurRadius input
+ * bar for new image, download button for
+ * every new blurred image and adds click
+ * event on output canvas for specific blur.
+ * @param {ImageObject} image
+ */
+async function processImage(image) {
+  updateBlurRadiusInputBar(image);
+
+  updateBlurredImage(image);
+
+  updateBlurImplementationRadioButtons(image);
+
+  const outputCanvas = document.getElementById('output-canvas');
+  outputCanvas.onclick = (event) => {
+    toggleAreaBlur(event, image);
   };
 }
 
 /**
- * Function to draw sample image (blurred and not blurred)
- * on input and output canvases.
+ * Function to set reblur action when user selects another
+ * blur implementation.
+ * @param {ImageObject} image
  */
-async function putSampleImagesOnPage() {
-  const SAMPLE_IMAGE_URL = 'images/hadgehog.jpg';
-  const BLURRED_SAMPLE_IMAGE_URL = 'images/blurred-hadgehog.png';
+function updateBlurImplementationRadioButtons(image) {
+  const useFillAreas = document.getElementById('use-fill-areas');
+  const useCanvases = document.getElementById('use-canvases');
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm');
 
-  /**
-   * @param {string} imageUrl
-   * @param {string} canvasId
-   */
-  const putImageOnCanvas = (imageUrl, canvasId) => {
-    // create Image object from url to put it on canvas.
-    const imageObj = new Image();
-    imageObj.src = imageUrl;
+  useFillAreas.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
+  };
+  useCanvases.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
+  };
+  useOwnAlgorithm.onchange = () => {
+    updateBlurRadiusInputBar(image);
+    updateBlurredImage(image);
+  };
+}
 
-    // need to wait until image loads to put it anywhere.
-    imageObj.onload = () => {
-      const canvas = document.getElementById(canvasId);
-      drawImageOnCanvas(imageObj, canvas);
+/**
+ * Function to handle click on output canvas
+ * and toggle blurness of rects to blur
+ * if any were clicked.
+ * @param {MouseEvent} event
+ * @param {ImageObject} image
+ */
+function toggleAreaBlur(event, image) {
+  const outputCanvas = document.getElementById('output-canvas');
+
+  // coordinates of click.
+  const eventX = event.offsetX;
+  const eventY = event.offsetY;
+
+  let wasSomeRectClicked = false;
+
+  for (const blurRect of image.blurAreas) {
+    // Scale coordinate from image coordinates to canvas coordinates.
+    const scaleForCanvas = (coordinate) => {
+      return coordinate * outputCanvas.clientWidth / image.object.width;
     };
-  };
 
-  putImageOnCanvas(SAMPLE_IMAGE_URL, 'input-canvas');
-  putImageOnCanvas(BLURRED_SAMPLE_IMAGE_URL, 'output-canvas');
+    // blurRect has all properties in original image coordinates,
+    // click event is in canvas coordinates.
+    // Scale blurRect to be in canvas coordinates.
+    const scaledRect = {
+      'leftX': scaleForCanvas(blurRect.leftX),
+      'topY': scaleForCanvas(blurRect.topY),
+      'rightX': scaleForCanvas(blurRect.leftX +
+          blurRect.width),
+      'bottomY': scaleForCanvas(blurRect.topY +
+          blurRect.height),
+    };
+
+    if (scaledRect.leftX <= eventX && eventX <= scaledRect.rightX &&
+        scaledRect.topY <= eventY && eventY <= scaledRect.bottomY) {
+      blurRect.toBeBlurred = !blurRect.toBeBlurred;
+      wasSomeRectClicked = true;
+    }
+  }
+
+  if (wasSomeRectClicked) {
+    updateBlurredImage(image);
+  }
 }
 
 /**
- * Function to draw image on canvas.
- * Width of canvas should be constant, height adjusts for
- * the image proportions.
- * @param {Image} image
- * @param {HTMLCanvasElement} canvas
+ * Function to blur image and update the page with it.
+ * Calls blurring function, draws blurred image
+ * on canvas, updates download button.
+ * @param {ImageObject} image
  */
-function drawImageOnCanvas(image, canvas) {
-  const ctx = canvas.getContext('2d');
+function updateBlurredImage(image) {
+  const outputCanvas = document.getElementById('output-canvas');
+  const blurRadiusInput = document.getElementById('blurring-radius');
 
-  // clear canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  const useCanvases = document.getElementById('use-canvases').checked;
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm').checked;
 
-  // resize canvas height to fit new image
-  canvas.height = image.height * canvas.width / image.width;
+  let blurredImage;
+  if (useOwnAlgorithm) {
+    blurredImage = (new LinearFilterBlurer()).getImageWithBlurredAreas(
+        image, blurRadiusInput.value);
+  } else if (useCanvases) {
+    blurredImage = (new CanvasBlurer()).getImageWithBlurredAreas(
+        image, blurRadiusInput.value);
+  } else {
+    blurredImage = (new Filler()).getImageWithBlurredAreas(
+        image);
+  }
 
-  // draw new image on it, scaling the image to fit in canvas
-  ctx.drawImage(image, 0, 0, canvas.width, canvas.height);
+  drawImageOnCanvas(blurredImage.object, outputCanvas);
+
+  updateDownloadButton(blurredImage);
+}
+
+/**
+ * Function to update download button to download new image.
+ * @param {ImageObject} image Image that we are making a
+ * download button for.
+ */
+function updateDownloadButton(image) {
+  const downloadButton = document.getElementById('download-button');
+
+  downloadButton.href = image.url;
+
+  // the name of the file which will be downloaded.
+  downloadButton.download = image.fileName;
+}
+
+/**
+ * Function to update blur radius input bar for new image.
+ * Sets max and default values to the bar, adds event
+ * listener to reblur the image when the bar is scrolled.
+ * We get the formula for default value from experiments and
+ * set max value to defaultValue * 2.
+ * We decided that the best blurRadius value
+ * depends mostly on the size of the area that we want to blur,
+ * which is why we have some sample area and adjust the best
+ * blur radius for it (which we get by experiments) to our
+ * image's blurAreas sizes.
+ * @param {ImageObject} image
+ */
+function updateBlurRadiusInputBar(image) {
+  const blurInput = document.getElementById('blur-input');
+
+  const useCanvases = document.getElementById('use-canvases').checked;
+  const useOwnAlgorithm = document.getElementById('use-own-algorithm').checked;
+
+  let DEFAULT_VALUE;
+  if (useOwnAlgorithm) {
+    DEFAULT_VALUE = (new LinearFilterBlurer()).getDefaultBlurRadius(
+        image.blurAreas);
+  } else if (useCanvases) {
+    DEFAULT_VALUE = (new CanvasBlurer()).getDefaultBlurRadius(image.blurAreas);
+  } else {
+    blurInput.classList.add('hide');
+    return;
+  }
+
+  blurInput.classList.remove('hide');
+
+  const blurRadiusInput = document.getElementById('blurring-radius');
+
+  blurRadiusInput.max = DEFAULT_VALUE * 2;
+  blurRadiusInput.value = DEFAULT_VALUE;
+
+  // reblur image every time user scrolls the blurRadiusInput bar.
+  blurRadiusInput.onchange = (event) => {
+    updateBlurredImage(image);
+  };
 }
